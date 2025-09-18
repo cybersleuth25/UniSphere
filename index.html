@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AIT Connect — Demo</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@600&display=swap">
+</head>
+
+<body>
+
+  <header class="header">
+    <div class="brand">
+      <div><img src="WhatsApp Image 2025-09-17 at 15.59.42_c538047f.jpg" alt="Logo" class="logo"></div>
+      <div class="title">
+        <h1>AIT Connect</h1>
+        <p>Stay Updated. Stay Connected.</p>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="search" title="Search posts">
+        🔎 <input id="searchInput" placeholder="Search announcements, events, resources..." />
+      </div>
+      <button class="btn" id="addPostBtn">+ Post</button>
+    </div>
+  </header>
+
+  <main class="main">
+    <section>
+      <nav class="tabs" role="tablist" aria-label="Main tabs">
+        <div class="tab active" data-tab="announcements">Announcements</div>
+        <div class="tab" data-tab="events">Events</div>
+        <div class="tab" data-tab="lostfound">Lost &amp; Found</div>
+        <div class="tab" data-tab="resources">Resource Exchange</div>
+        <div class="tab" data-tab="groups">Community Connect</div>
+      </nav>
+
+      <div id="contentArea">
+      </div>
+
+      <div class="footer">Demo data for <strong>AIT Connect</strong>. Data saved locally (browser storage).</div>
+    </section>
+
+    <aside class="sidebar">
+      <h3 style="margin-top:0">Quick Actions</h3>
+      <p class="small">Easily create a new post by selecting a category. The demo data is saved in your browser's local
+        storage.</p>
+
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <button class="btn secondary" data-post-type="announcements">Add Announcement</button>
+        <button class="btn secondary" data-post-type="events">Add Event</button>
+        <button class="btn secondary" data-post-type="lostfound">Add Lost/Found</button>
+        <button class="btn secondary" data-post-type="resources">Add Resource</button>
+        <button class="btn secondary" data-post-type="groups">Create Group</button>
+      </div>
+
+      <hr style="margin:16px 0; border:none; border-top:1px solid var(--muted)">
+
+      <h4 style="margin:6px 0">About AIT Connect</h4>
+      <p class="small">A student-centric hub for announcements, events, resource sharing, and more, tailored
+        specifically for the AIT community.</p>
+    </aside>
+  </main>
+
+  <div id="postModal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn">&times;</span>
+      <h2>Create New Post</h2>
+      <form id="postForm">
+        <input type="hidden" id="postType" name="postType">
+
+        <div class="form-group">
+          <label for="postTitle">Title</label>
+          <input type="text" id="postTitle" name="postTitle" required>
+        </div>
+
+        <div class="form-group">
+          <label for="postDesc">Description</label>
+          <textarea id="postDesc" name="postDesc" required></textarea>
+        </div>
+
+        <div class="form-group" id="lostFoundType" style="display: none;">
+          <label for="itemType">Type</label>
+          <select id="itemType" name="itemType">
+            <option value="lost">Lost</option>
+            <option value="found">Found</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="postImage">Image (Optional)</label>
+          <input type="file" id="postImage" accept="image/*" name="postImage">
+        </div>
+
+        <div class="form-group">
+          <label for="postContact">Contact</label>
+          <input type="text" id="postContact" name="postContact" required>
+        </div>
+
+        <div class="form-group">
+          <label for="postLocation">Location/Venue</label>
+          <input type="text" id="postLocation" name="postLocation">
+        </div>
+
+        <button type="submit" class="btn">Submit Post</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
