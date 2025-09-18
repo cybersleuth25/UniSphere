@@ -9,12 +9,12 @@ const seedData = {
   ],
   events: [
     { id: 'e1', title: 'Hackathon 2025', desc: '24-hour hackathon open to all branches. Cash prizes and goodies up for grabs!', date: '2025-10-05', venue: 'Auditorium', contact: 'hackathon@ait.ac.in' },
-    { id: 'e2', title: 'Chunchana', desc: 'Two-day cultural fest with competitions.', date: '2025-11-12', venue: 'Campus Grounds', contact: 'https://aitckm.edu.in/facilities/chunchana/',image: 'Screenshot 2025-09-18 074227.png' },
+    { id: 'e2', title: 'Chunchana', desc: 'Two-day cultural fest with competitions.', date: '2025-11-12', venue: 'Campus Grounds', contact: 'https://aitckm.edu.in/facilities/chunchana/', image: 'cybersleuth25/unisphere/UniSphere-b219a4895dcae7ec19ae0367ef1ae6a5a8ba8e02/Screenshot 2025-09-18 074227.png' },
     { id: 'e3', title: '6 days Add-on courses', desc: 'Join 6 days Add-on courses done by .', date: '2025-10-18', venue: 'Respective class', contact: 'csdept@ait.ac.in' }
   ],
   lostfound: [
     { id: 'l1', type: 'lost', item: 'Calculator', desc: 'Black Casio calc lost in the CSE block, possibly near Lab 3. It has a sticker of a star on the back.', date: '2025-09-15', location: 'CSE Block', contact: 'Mihir, mihir.s@ait.ac.in', image: 'https://via.placeholder.com/96x72.png?text=Calculator' },
-    { id: 'l2', type: 'found', item: 'ID Card', desc: 'Found ID card of Suha Fatima near the library entrance. Please contact to claim.', date: '2025-09-16', location: 'Library Entrance', contact: 'Rohan, rohan.m@ait.ac.in', image: 'C:\VS code\AIT connect\ID card.jpg' },
+    { id: 'l2', type: 'found', item: 'ID Card', desc: 'Found ID card of Suha Fatima near the library entrance. Please contact to claim.', date: '2025-09-16', location: 'Library Entrance', contact: 'Rohan, rohan.m@ait.ac.in', image: 'https://i.ibb.co/L5hY52G/suha-id-card.jpg' },
     { id: 'l3', type: 'lost', item: 'Headphones', desc: 'Lost my black Sennheiser headphones in the cafeteria. Last seen around 2 PM.', date: '2025-09-17', location: 'Cafeteria', contact: 'Likith, 9876543210' },
   ],
   resources: [
@@ -32,7 +32,8 @@ const seedData = {
 /**********************
 * State & Helpers
 **********************/
-const STORAGE_KEY = 'ait_connect_posts_v6';
+const STORAGE_KEY = 'unisphere_posts';
+const THEME_KEY = 'unisphere_theme';
 
 function loadState() {
   const raw = localStorage.getItem(STORAGE_KEY);
@@ -92,7 +93,7 @@ function renderTab(tab) {
     (x.contact || '').toLowerCase().includes(query)
   );
 
-  if (filtered.length === 0) { contentArea.innerHTML = '<p style="text-align:center; color:#6b7280;">No data found. Try creating a new post!</p>'; return; }
+  if (filtered.length === 0) { contentArea.innerHTML = '<p style="text-align:center; color:var(--text-muted);">No data found. Try creating a new post!</p>'; return; }
 
   const cards = filtered.map(x => {
     const title = x.title || (x.type === 'lost' ? 'Lost: ' : 'Found: ') + x.item;
@@ -207,6 +208,27 @@ form.addEventListener('submit', (e) => {
     addPostToState(newPost);
   }
 });
+
+// Theme toggle functionality
+const themeToggleCheckbox = document.getElementById('checkbox');
+const body = document.body;
+
+function toggleTheme() {
+  body.classList.toggle('light-theme');
+  const isLight = body.classList.contains('light-theme');
+  localStorage.setItem(THEME_KEY, isLight ? 'light' : 'dark');
+}
+
+themeToggleCheckbox.addEventListener('change', toggleTheme);
+
+// Apply saved theme on page load
+const savedTheme = localStorage.getItem(THEME_KEY);
+if (savedTheme === 'light') {
+  body.classList.add('light-theme');
+  themeToggleCheckbox.checked = true;
+} else {
+  themeToggleCheckbox.checked = false;
+}
 
 // Initial
 setActiveTab('announcements');
