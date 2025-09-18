@@ -8,13 +8,13 @@ const seedData = {
     { id: 'a3', title: 'Holiday for Ganesh Chaturthi', desc: 'College will remain closed on 25th September for Ganesh Chaturthi.', date: '2025-09-23', venue: 'All Campus', contact: 'admin@ait.ac.in' },
   ],
   events: [
-    { id: 'e1', title: 'Hackathon 2025', desc: '48-hour hackathon open to all branches. Cash prizes and goodies up for grabs!', date: '2025-10-05', venue: 'Auditorium', contact: 'hackathon@ait.ac.in' },
-    { id: 'e2', title: 'Chunchana', desc: 'Two-day cultural fest with competitions.', date: '2025-11-12', venue: 'Campus Grounds', contact: 'https://aitckm.edu.in/facilities/chunchana/' },
+    { id: 'e1', title: 'Hackathon 2025', desc: '24-hour hackathon open to all branches. Cash prizes and goodies up for grabs!', date: '2025-10-05', venue: 'Auditorium', contact: 'hackathon@ait.ac.in' },
+    { id: 'e2', title: 'Chunchana', desc: 'Two-day cultural fest with competitions.', date: '2025-11-12', venue: 'Campus Grounds', contact: 'https://aitckm.edu.in/facilities/chunchana/',image: 'Screenshot 2025-09-18 074227.png' },
     { id: 'e3', title: '6 days Add-on courses', desc: 'Join 6 days Add-on courses done by .', date: '2025-10-18', venue: 'Respective class', contact: 'csdept@ait.ac.in' }
   ],
   lostfound: [
     { id: 'l1', type: 'lost', item: 'Calculator', desc: 'Black Casio calc lost in the CSE block, possibly near Lab 3. It has a sticker of a star on the back.', date: '2025-09-15', location: 'CSE Block', contact: 'Mihir, mihir.s@ait.ac.in', image: 'https://via.placeholder.com/96x72.png?text=Calculator' },
-    { id: 'l2', type: 'found', item: 'ID Card', desc: 'Found ID card of Ananya Sharma near the library entrance. Please contact to claim.', date: '2025-09-16', location: 'Library Entrance', contact: 'Rohan, rohan.m@ait.ac.in', image: 'https://via.placeholder.com/96x72.png?text=ID+Card' },
+    { id: 'l2', type: 'found', item: 'ID Card', desc: 'Found ID card of Suha Fatima near the library entrance. Please contact to claim.', date: '2025-09-16', location: 'Library Entrance', contact: 'Rohan, rohan.m@ait.ac.in', image: 'C:\VS code\AIT connect\ID card.jpg' },
     { id: 'l3', type: 'lost', item: 'Headphones', desc: 'Lost my black Sennheiser headphones in the cafeteria. Last seen around 2 PM.', date: '2025-09-17', location: 'Cafeteria', contact: 'Likith, 9876543210' },
   ],
   resources: [
