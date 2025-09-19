@@ -1,11 +1,9 @@
 <?php
-$servername = "localhost";
-$username = "root";   // default in XAMPP
-$password = "";       // default is empty
-$dbname = "unisphere";
+// Ensure this file is located outside of the web root in a production environment
+include 'config.php';
 
 // Create connection
-$conn = new mysqli($servername, $username, $password, $dbname);
+$conn = new mysqli(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME);
 
 // Check connection
 if ($conn->connect_error) {

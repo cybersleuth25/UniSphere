@@ -1,23 +1,17 @@
 <!doctype html>
 <html lang="en">
-
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>UniSphere Login</title>
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@600&display=swap">
 </head>
-
 <body>
-
   <div class="login-container">
     <div class="login-card">
-      <h1>UniSphere Login</h1>
-      <form id="loginForm">
+      <h1>Login</h1>
+      <form action="login.php" method="POST">
         <div class="form-group">
-          <label for="username">Username/Email</label>
+          <label for="username">Username or Email</label>
           <input type="text" id="username" name="username" required>
         </div>
         <div class="form-group">
@@ -26,10 +20,8 @@
         </div>
         <button type="submit" class="btn">Login</button>
       </form>
-      <p class="small-text">Don't have an account? <a href="signup.html">Sign up</a></p>
+      <p class="small-text">Don't have an account? <a href="signup.html">Sign Up</a></p>
     </div>
   </div>
-  <script src="script.js"></script>
 </body>
-
 </html>

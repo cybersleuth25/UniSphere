@@ -1,51 +1,23 @@
 /**********************
-* Seed data
-**********************/
-const seedData = {
-  announcements: [
-    { id: 'a1', title: 'Mid-Sem Timetable Released', desc: 'The timetable for mid-sems is uploaded. Check the portal for your schedule.', date: '2025-09-20', venue: 'Exam Cell', contact: 'examcell@ait.ac.in', urgent: false },
-    { id: 'a2', title: 'Placement Drive: Infosys', desc: 'Infosys placement drive on 22nd Sept. All final year students are requested to register.', date: '2025-09-22', venue: 'Placement Cell', contact: 'placement@ait.ac.in', urgent: true },
-    { id: 'a3', title: 'Holiday for Ganesh Chaturthi', desc: 'College will remain closed on 25th September for Ganesh Chaturthi.', date: '2025-09-23', venue: 'All Campus', contact: 'admin@ait.ac.in' },
-  ],
-  events: [
-    { id: 'e1', title: 'Hackathon 2025', desc: '24-hour hackathon open to all branches. Cash prizes and goodies up for grabs!', date: '2025-10-05', venue: 'Auditorium', contact: 'hackathon@ait.ac.in' },
-    { id: 'e2', title: 'Chunchana', desc: 'Two-day cultural fest with competitions.', date: '2025-11-12', venue: 'Campus Grounds', contact: 'https://aitckm.edu.in/facilities/chunchana/', image: 'cybersleuth25/unisphere/UniSphere-b219a4895dcae7ec19ae0367ef1ae6a5a8ba8e02/Screenshot 2025-09-18 074227.png' },
-    { id: 'e3', title: '6 days Add-on courses', desc: 'Join 6 days Add-on courses done by .', date: '2025-10-18', venue: 'Respective class', contact: 'csdept@ait.ac.in' }
-  ],
-  lostfound: [
-    { id: 'l1', type: 'lost', item: 'Calculator', desc: 'Black Casio calc lost in the CSE block, possibly near Lab 3. It has a sticker of a star on the back.', date: '2025-09-15', location: 'CSE Block', contact: 'Mihir, mihir.s@ait.ac.in', image: 'https://via.placeholder.com/96x72.png?text=Calculator' },
-    { id: 'l2', type: 'found', item: 'ID Card', desc: 'Found ID card of Suha Fatima near the library entrance. Please contact to claim.', date: '2025-09-16', location: 'Library Entrance', contact: 'Rohan, rohan.m@ait.ac.in', image: 'https://i.ibb.co/L5hY52G/suha-id-card.jpg' },
-    { id: 'l3', type: 'lost', item: 'Headphones', desc: 'Lost my black Sennheiser headphones in the cafeteria. Last seen around 2 PM.', date: '2025-09-17', location: 'Cafeteria', contact: 'Likith, 9876543210' },
-  ],
-  resources: [
-    { id: 'r1', title: 'Operating System Notes', desc: 'Complete handwritten notes for 3rd sem. Willing to share soft copies.', date: '2025-09-14', contact: 'Arjun, arjun.v@ait.ac.in', image: 'https://via.placeholder.com/96x72.png?text=OS+Notes' },
-    { id: 'r2', title: 'C Programming Book', desc: 'Available for borrow. Author: Balagurusamy. Contact me to pick it up.', date: '2025-09-12', contact: 'Sneha, sneha.k@ait.ac.in', image: 'https://via.placeholder.com/96x72.png?text=C+Book' },
-    { id: 'r3', title: 'Physics & Maths Reference Books', desc: 'Selling my 1st year books. Good condition. Message for price.', date: '2025-09-18', contact: 'Kavya, kavya.b@ait.ac.in' },
-  ],
-  groups: [
-    { id: 'g1', title: 'AI & ML Club', desc: 'Weekly discussions on AI, ML, and Data Science. Open to all students.', date: 'Every Friday', venue: 'Lab 204', contact: 'mlclub@ait.ac.in' },
-    { id: 'g2', title: 'Photography Group', desc: 'For students interested in capturing memories. Join our weekend meetups and photo walks.', date: 'Weekend meetups', venue: 'Campus Lawn', contact: 'photo@ait.ac.in' },
-    { id: 'g3', title: 'Study Group - 3rd Sem CSE', desc: 'Maths & DSA discussions. Looking for project partners.', date: 'Weekly', venue: 'Library Room 2', contact: 'Rohan R M, rohan.m@ait.ac.in' },
-  ]
-};
-
-/**********************
 * State & Helpers
 **********************/
-const STORAGE_KEY = 'unisphere_posts';
-const THEME_KEY = 'unisphere_theme';
 const AUTH_KEY = 'unisphere_auth';
+let currentUser = { username: null, email: null, role: null };
 
-let currentUser = { username: null, role: null };
-
-function loadState() {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (!raw) return JSON.parse(JSON.stringify(seedData));
-  try { return JSON.parse(raw); } catch (e) { return JSON.parse(JSON.stringify(seedData)); }
+// Function to safely get user data from localStorage
+function getAuthInfo() {
+  try {
+    const authInfo = JSON.parse(localStorage.getItem(AUTH_KEY) || '{}');
+    return {
+      username: authInfo.username || null,
+      email: authInfo.email || null,
+      role: authInfo.role || null
+    };
+  } catch (e) {
+    console.error("Failed to parse auth info from localStorage", e);
+    return { username: null, email: null, role: null };
+  }
 }
-function saveState(state) { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-
-let state = loadState();
 
 /**********************
 * Rendering
@@ -56,91 +28,82 @@ const searchInput = document.getElementById('searchInput');
 
 function setActiveTab(tabName) {
   tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tabName));
-  renderTab(tabName);
+  fetchPostsAndRender(tabName);
 }
 tabs.forEach(t => t.addEventListener('click', () => setActiveTab(t.dataset.tab)));
 
-function cardContainer(itemsHtml) { return `<div class="cards">${itemsHtml}</div>`; }
+function cardContainer(itemsHtml) {
+  return `<div class="cards">${itemsHtml}</div>`;
+}
 
-function renderTab(tab) {
+function fetchPostsAndRender(tab) {
   contentArea.innerHTML = '';
   const query = searchInput.value.trim().toLowerCase();
 
-  let items = [];
-  let label = '';
-  let hasImage = false;
+  fetch('api.php')
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    })
+    .then(allPosts => {
+      let filtered = allPosts.filter(x => x.postType === tab);
 
-  if (tab === 'announcements') {
-    items = state.announcements;
-    label = 'ANN';
-  } else if (tab === 'events') {
-    items = state.events;
-    label = 'EVT';
-  } else if (tab === 'lostfound') {
-    items = state.lostfound;
-    label = 'LF';
-    hasImage = true;
-  } else if (tab === 'resources') {
-    items = state.resources;
-    label = 'RES';
-    hasImage = true;
-  } else if (tab === 'groups') {
-    items = state.groups;
-    label = 'GRP';
-  }
+      filtered = filtered.filter(x =>
+        (x.title || x.item || '').toLowerCase().includes(query) ||
+        (x.description || '').toLowerCase().includes(query) ||
+        (x.location || '').toLowerCase().includes(query) ||
+        (x.contact || '').toLowerCase().includes(query)
+      );
 
-  const filtered = items.filter(x =>
-    (x.title || x.item || '').toLowerCase().includes(query) ||
-    (x.desc || '').toLowerCase().includes(query) ||
-    (x.venue || x.location || '').toLowerCase().includes(query) ||
-    (x.contact || '').toLowerCase().includes(query)
-  );
+      if (filtered.length === 0) {
+        contentArea.innerHTML = '<p style="text-align:center; color:var(--text-muted);">No data found. Try creating a new post!</p>';
+        return;
+      }
 
-  if (filtered.length === 0) { contentArea.innerHTML = '<p style="text-align:center; color:var(--text-muted);">No data found. Try creating a new post!</p>'; return; }
+      const cards = filtered.map(x => {
+        const title = x.title || (x.itemType === 'lost' ? 'Lost: ' : 'Found: ') + x.item;
+        const location = x.location || '';
+        const imageHtml = x.image ?
+          `<div class="thumb image" style="background-image:url('${escapeHtml(x.image)}')"></div>` :
+          `<div class="thumb">${tab.slice(0, 3).toUpperCase()}</div>`;
 
-  const cards = filtered.map(x => {
-    const title = x.title || (x.type === 'lost' ? 'Lost: ' : 'Found: ') + x.item;
-    const location = x.venue || x.location || '';
-    const imageHtml = x.image
-      ? `<div class="thumb image" style="background-image:url('${escapeHtml(x.image)}')"></div>`
-      : `<div class="thumb">${label}</div>`;
+        let contactChip = `<span class="chip">${escapeHtml(x.contact)}</span>`;
 
-    let contactChip;
-    if (x.contact.includes('@')) {
-      contactChip = `<a href="mailto:${escapeHtml(x.contact)}" target="_blank" class="chip">${escapeHtml(x.contact)}</a>`;
-    } else if (x.contact.startsWith('http')) {
-      contactChip = `<a href="${escapeHtml(x.contact)}" target="_blank" class="chip">${escapeHtml(x.contact)}</a>`;
-    } else if (x.contact.match(/^\d+$/) && x.contact.length >= 10) {
-      contactChip = `<a href="tel:${escapeHtml(x.contact)}" class="chip">${escapeHtml(x.contact)}</a>`;
-    } else {
-      contactChip = `<span class="chip">${escapeHtml(x.contact)}</span>`;
-    }
+        const isAuthor = currentUser.email && x.author && x.author === currentUser.email;
+        const isAdmin = currentUser.role === 'admin';
+        const showEditDelete = isAdmin || isAuthor;
 
-    const isAuthor = x.contact === currentUser.username;
-    const isAdmin = currentUser.role === 'admin';
-    const showEditDelete = isAdmin || (isAuthor && (tab !== 'announcements' && tab !== 'events'));
+        return `
+          <article class="card" data-post-id="${x.id}" data-post-type="${tab}">
+          ${imageHtml}
+          <div style="flex:1">
+            <h3>${escapeHtml(title)} ${x.urgent ? '<span class="urgent">URGENT</span>' : ''}</h3>
+            <div class="meta">${x.date}${location ? ' • ' + escapeHtml(location) : ''}</div>
+            <p style="margin:0 0 8px 0">${escapeHtml(x.description)}</p>
+            <div class="actions">
+              ${contactChip}
+              ${showEditDelete ? `<button class="btn secondary edit-btn">Edit</button> <button class="btn secondary delete-btn">Delete</button>` : ''}
+            </div>
+          </div>
+          </article>`;
+      }).join('');
 
-    return `
-      <article class="card" data-post-id="${x.id}" data-post-type="${tab}">
-      ${imageHtml}
-      <div style="flex:1">
-        <h3>${escapeHtml(title)} ${x.urgent ? '<span class="urgent">URGENT</span>' : ''}</h3>
-        <div class="meta">${x.date}${location ? ' • ' + escapeHtml(location) : ''}</div>
-        <p style="margin:0 0 8px 0">${escapeHtml(x.desc)}</p>
-        <div class="actions">
-          ${contactChip}
-          ${showEditDelete ? `<button class="btn secondary edit-btn">Edit</button> <button class="btn secondary delete-btn">Delete</button>` : ''}
-        </div>
-      </div>
-      </article>`;
-  }).join('');
-  contentArea.innerHTML = cardContainer(cards);
+      contentArea.innerHTML = cardContainer(cards);
 
-  document.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', handleEditClick));
-  document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', handleDeleteClick));
+      document.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', handleEditClick));
+      document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', handleDeleteClick));
+    })
+    .catch(error => {
+      console.error("Error fetching or rendering posts:", error);
+      contentArea.innerHTML = '<p style="text-align:center; color:var(--text-muted);">Failed to load posts. Please try again later.</p>';
+    });
 }
 
-function escapeHtml(s) { return s ? s.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m])) : ''; }
+function escapeHtml(s) {
+  return s ? s.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m])) : '';
+}
 
 /**********************
 * Modal & Form Handling
@@ -158,43 +121,62 @@ function handleEditClick(e) {
   const postId = card.dataset.postId;
   const postType = card.dataset.postType;
 
-  const post = state[postType].find(p => p.id === postId);
+  // Fetch the specific post data from the server
+  fetch('api.php')
+    .then(response => response.json())
+    .then(allPosts => {
+      const post = allPosts.find(p => p.id === postId);
+      if (!post) {
+        alert('Post not found.');
+        return;
+      }
 
-  postTypeInput.value = postType;
-  postIdInput.value = postId;
-  
-  if (postType === 'lostfound') {
-    lostFoundTypeDiv.style.display = 'block';
-    document.getElementById('itemType').value = post.type;
-    postTitleInput.value = post.item;
-    document.getElementById('postLocation').value = post.location;
-  } else {
-    lostFoundTypeDiv.style.display = 'none';
-    postTitleInput.value = post.title;
-    document.getElementById('postLocation').value = post.venue;
-  }
+      postTypeInput.value = postType;
+      postIdInput.value = postId;
 
-  document.getElementById('postDesc').value = post.desc;
-  document.getElementById('postContact').value = post.contact;
-
-  modal.classList.add('show');
+      if (postType === 'lostfound') {
+        lostFoundTypeDiv.style.display = 'block';
+        document.getElementById('itemType').value = post.itemType;
+        postTitleInput.value = post.title;
+        document.getElementById('postLocation').value = post.location;
+      } else {
+        lostFoundTypeDiv.style.display = 'none';
+        postTitleInput.value = post.title;
+        document.getElementById('postLocation').value = post.location;
+      }
+      document.getElementById('postDesc').value = post.description;
+      document.getElementById('postContact').value = post.contact;
+      modal.classList.add('show');
+    })
+    .catch(error => console.error('Error fetching post for edit:', error));
 }
 
 function handleDeleteClick(e) {
-  if (!confirm('Are you sure you want to delete this post?')) return;
+  if (!window.confirm('Are you sure you want to delete this post?')) return;
 
   const card = e.target.closest('.card');
   const postId = card.dataset.postId;
   const postType = card.dataset.postType;
 
-  state[postType] = state[postType].filter(p => p.id !== postId);
-  saveState(state);
-  renderTab(postType);
+  fetch(`api.php?id=${postId}`, { method: 'DELETE' })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        alert(data.message);
+        fetchPostsAndRender(postType);
+      } else {
+        alert(data.message);
+      }
+    })
+    .catch(error => {
+      console.error("Error deleting post:", error);
+      alert('An error occurred while deleting the post.');
+    });
 }
 
 const showModal = (type) => {
   postTypeInput.value = type;
-  postIdInput.value = ''; // Clear for new posts
+  postIdInput.value = '';
   lostFoundTypeDiv.style.display = (type === 'lostfound') ? 'block' : 'none';
   postTitleInput.placeholder = {
     'lostfound': 'e.g., Laptop, Watch, Keys',
@@ -234,46 +216,44 @@ if (form) {
     e.preventDefault();
     const type = postTypeInput.value;
     const postId = postIdInput.value;
-    const title = postTitleInput.value;
-    const desc = document.getElementById('postDesc').value;
-    const contact = document.getElementById('postContact').value;
-    const location = document.getElementById('postLocation').value;
-    const itemType = document.getElementById('itemType').value;
-    const imageFile = postImageInput.files[0];
+    const isNewPost = !postId;
     
-    let newPost = { id: postId || (type[0] + Date.now()), date: new Date().toISOString().slice(0, 10), desc: desc, contact: contact };
-
-    if (type === 'lostfound') {
-      newPost.type = itemType;
-      newPost.item = title;
-      newPost.location = location;
-    } else {
-      newPost.title = title;
-      newPost.venue = location;
-    }
-
-    const processPost = (postData) => {
-      if (postId) {
-        state[type] = state[type].map(p => p.id === postId ? { ...postData, image: postData.image || p.image } : p);
-      } else {
-        state[type].unshift(postData);
-      }
-      saveState(state);
-      setActiveTab(type);
-      modal.classList.remove('show');
-      form.reset();
+    const postData = {
+      postType: type,
+      title: postTitleInput.value,
+      description: document.getElementById('postDesc').value,
+      contact: document.getElementById('postContact').value,
+      location: document.getElementById('postLocation').value,
+      image: 'https://placehold.co/96x72' // Using placeholder for now, image upload requires more complex logic
     };
 
-    if (imageFile) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        newPost.image = event.target.result;
-        processPost(newPost);
-      };
-      reader.readAsDataURL(imageFile);
-    } else {
-      processPost(newPost);
+    if (type === 'lostfound') {
+      postData.itemType = document.getElementById('itemType').value;
+      postData.title = postTitleInput.value;
     }
+
+    const method = isNewPost ? 'POST' : 'PUT';
+    const url = 'api.php';
+
+    fetch(url, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(postData),
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert(data.message);
+          modal.classList.remove('show');
+          fetchPostsAndRender(type);
+        } else {
+          alert(data.message);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+      });
   });
 }
 
@@ -282,18 +262,23 @@ if (form) {
 **********************/
 const themeToggleCheckbox = document.getElementById('checkbox');
 const body = document.body;
+const loginForm = document.getElementById('loginForm');
+const signupForm = document.getElementById('signupForm');
+const logoutBtn = document.getElementById('logoutBtn');
+const authButtonsContainer = document.getElementById('auth-buttons');
+const userProfileEmail = document.getElementById('userProfileEmail');
 
 function toggleTheme() {
   body.classList.toggle('light-theme');
   const isLight = body.classList.contains('light-theme');
-  localStorage.setItem(THEME_KEY, isLight ? 'light' : 'dark');
+  localStorage.setItem('unisphere_theme', isLight ? 'light' : 'dark');
 }
 
 if (themeToggleCheckbox) {
   themeToggleCheckbox.addEventListener('change', toggleTheme);
 }
 
-const savedTheme = localStorage.getItem(THEME_KEY);
+const savedTheme = localStorage.getItem('unisphere_theme');
 if (savedTheme === 'light') {
   body.classList.add('light-theme');
   if (themeToggleCheckbox) themeToggleCheckbox.checked = true;
@@ -301,15 +286,9 @@ if (savedTheme === 'light') {
   if (themeToggleCheckbox) themeToggleCheckbox.checked = false;
 }
 
-const loginForm = document.getElementById('loginForm');
-const logoutBtn = document.getElementById('logoutBtn');
-const authButtonsContainer = document.getElementById('auth-buttons');
-
 function checkLoginStatus() {
-  const authInfo = JSON.parse(localStorage.getItem(AUTH_KEY) || '{}');
-  currentUser.username = authInfo.username;
-  currentUser.role = authInfo.role;
-  const isLoggedIn = !!currentUser.username;
+  currentUser = getAuthInfo();
+  const isLoggedIn = !!currentUser.email;
   const currentPage = window.location.pathname.split('/').pop();
 
   if (currentPage === 'login.html') {
@@ -322,6 +301,11 @@ function checkLoginStatus() {
   if (currentPage === 'profile.html') {
     if (!isLoggedIn) {
       window.location.href = 'login.html';
+    } else {
+      const profileEmail = document.querySelector('.profile-info p strong');
+      if (profileEmail) profileEmail.textContent = currentUser.email;
+      const profileUsername = document.querySelector('.profile-header h2');
+      if (profileUsername) profileUsername.textContent = `Welcome, ${currentUser.username}!`;
     }
     return;
   }
@@ -340,7 +324,6 @@ function checkLoginStatus() {
         });
       }
 
-      // Hide or show sidebar buttons based on role
       sidebarButtons.forEach(btn => {
         if (currentUser.role === 'admin') {
           btn.style.display = 'block';
@@ -369,13 +352,67 @@ function checkLoginStatus() {
   }
 }
 
+// Handle Login Form Submission
 if (loginForm) {
   loginForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const username = document.getElementById('username').value;
-    const role = (username.toLowerCase() === 'admin') ? 'admin' : 'student';
-    localStorage.setItem(AUTH_KEY, JSON.stringify({ username, role }));
-    window.location.href = 'index.html';
+    const password = document.getElementById('password').value;
+
+    const formData = new FormData();
+    formData.append('username', username);
+    formData.append('password', password);
+
+    fetch('login.php', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          localStorage.setItem(AUTH_KEY, JSON.stringify(data.user));
+          window.location.href = 'index.html';
+        } else {
+          alert(data.message);
+        }
+      })
+      .catch(error => {
+        console.error('Login error:', error);
+        alert('An error occurred during login. Please try again.');
+      });
+  });
+}
+
+// Handle Signup Form Submission
+if (signupForm) {
+  signupForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const newUsername = document.getElementById('newUsername').value;
+    const newEmail = document.getElementById('newEmail').value;
+    const newPassword = document.getElementById('newPassword').value;
+
+    const formData = new FormData();
+    formData.append('newUsername', newUsername);
+    formData.append('newEmail', newEmail);
+    formData.append('newPassword', newPassword);
+
+    fetch('signup.php', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          localStorage.setItem(AUTH_KEY, JSON.stringify(data.user));
+          window.location.href = 'profile.html'; // Redirect to profile after signup
+        } else {
+          alert(data.message);
+        }
+      })
+      .catch(error => {
+        console.error('Signup error:', error);
+        alert('An error occurred during signup. Please try again.');
+      });
   });
 }
 
@@ -393,7 +430,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setActiveTab('announcements');
     searchInput.addEventListener('input', () => {
       const active = document.querySelector('.tab.active').dataset.tab;
-      renderTab(active);
+      fetchPostsAndRender(active);
     });
   }
 });
