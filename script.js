@@ -264,6 +264,7 @@ const themeToggleCheckbox = document.getElementById('checkbox');
 const body = document.body;
 const loginForm = document.getElementById('loginForm');
 const signupForm = document.getElementById('signupForm');
+const forgotPasswordForm = document.getElementById('forgotPasswordForm');
 const logoutBtn = document.getElementById('logoutBtn');
 const authButtonsContainer = document.getElementById('auth-buttons');
 const userProfileEmail = document.getElementById('userProfileEmail');
@@ -415,6 +416,31 @@ if (signupForm) {
       });
   });
 }
+
+// Handle Forgot Password Form Submission
+if (forgotPasswordForm) {
+  forgotPasswordForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const email = document.getElementById('email').value;
+
+    const formData = new FormData();
+    formData.append('email', email);
+
+    fetch('forgot-password.php', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        alert(data.message);
+      })
+      .catch(error => {
+        console.error('Forgot password error:', error);
+        alert('An error occurred. Please try again.');
+      });
+  });
+}
+
 
 if (logoutBtn) {
   logoutBtn.addEventListener('click', () => {
