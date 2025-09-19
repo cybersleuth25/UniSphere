@@ -15,10 +15,10 @@
 }
 
 body.light-theme {
-  /* Morning (Light) Theme Variables (The old blue/indigo theme) */
+  /* Morning (Light) Theme Variables */
   --primary-color: #4F46E5;
   --accent-color: #0EA5E9;
-  --bg: #e3f2fd;
+  --bg: #F0F4F8;
   --bg-light: #f5f7fa;
   --text-color: #0F172A;
   --text-muted: #7f8c8d;
@@ -29,6 +29,7 @@ body.light-theme {
   --glass-shadow: rgba(44, 62, 80, 0.1);
 }
 
+/* General Styles */
 * {
   box-sizing: border-box;
 }
@@ -42,6 +43,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
   padding: 24px;
   transition: background 0.5s ease, color 0.5s ease;
+  animation: bg-animate 20s infinite alternate linear;
+}
+
+@keyframes bg-animate {
+  from { background-position: 0% 50%; }
+  to { background-position: 100% 50%; }
 }
 
 /* Header */
@@ -160,7 +167,13 @@ body.light-theme .btn {
 body.light-theme .btn.secondary:hover {
   background: rgba(255, 255, 255, 0.3);
 }
-
+.auth-buttons-wrapper {
+  display: flex;
+  gap: 8px;
+}
+.auth-buttons-wrapper .btn {
+  font-size: 14px;
+}
 
 /* THEME SWITCHER SLIDER */
 .theme-switch-wrapper {
@@ -485,4 +498,60 @@ input:checked+.slider:before {
 .form-group textarea {
   resize: vertical;
   min-height: 100px;
+}
+
+/* Login and Profile Pages */
+.login-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 0;
+}
+.login-container {
+  text-align: center;
+  max-width: 400px;
+  margin: auto;
+}
+.login-card, .profile-card {
+  background: var(--glass-bg);
+  border-radius: var(--card-radius);
+  padding: 32px;
+  box-shadow: 0 10px 30px var(--glass-shadow);
+  backdrop-filter: blur(15px);
+  border: 1px solid var(--glass-border);
+}
+.login-card h1 {
+  margin-top: 0;
+  font-size: 24px;
+}
+.login-card .btn {
+  width: 100%;
+  margin-top: 16px;
+}
+.profile-card {
+  text-align: center;
+  max-width: 400px;
+  margin: auto;
+}
+.profile-header {
+  margin-bottom: 24px;
+}
+.profile-avatar {
+  font-size: 64px;
+  line-height: 1;
+}
+.profile-info {
+  text-align: left;
+  margin-bottom: 24px;
+}
+.profile-info strong {
+  color: var(--primary-color);
+}
+.profile-card .btn {
+  width: 100%;
+}
+.small-text {
+  font-size: 13px;
+  margin-top: 16px;
 }

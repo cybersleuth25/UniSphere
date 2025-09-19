@@ -34,6 +34,9 @@ const seedData = {
 **********************/
 const STORAGE_KEY = 'unisphere_posts';
 const THEME_KEY = 'unisphere_theme';
+const AUTH_KEY = 'unisphere_auth';
+
+let currentUser = { username: null, role: null };
 
 function loadState() {
   const raw = localStorage.getItem(STORAGE_KEY);
@@ -113,8 +116,12 @@ function renderTab(tab) {
       contactChip = `<span class="chip">${escapeHtml(x.contact)}</span>`;
     }
 
+    const isAuthor = x.contact === currentUser.username;
+    const isAdmin = currentUser.role === 'admin';
+    const showEditDelete = isAdmin || (isAuthor && (tab !== 'announcements' && tab !== 'events'));
+
     return `
-      <article class="card">
+      <article class="card" data-post-id="${x.id}" data-post-type="${tab}">
       ${imageHtml}
       <div style="flex:1">
         <h3>${escapeHtml(title)} ${x.urgent ? '<span class="urgent">URGENT</span>' : ''}</h3>
@@ -122,11 +129,15 @@ function renderTab(tab) {
         <p style="margin:0 0 8px 0">${escapeHtml(x.desc)}</p>
         <div class="actions">
           ${contactChip}
+          ${showEditDelete ? `<button class="btn secondary edit-btn">Edit</button> <button class="btn secondary delete-btn">Delete</button>` : ''}
         </div>
       </div>
       </article>`;
   }).join('');
   contentArea.innerHTML = cardContainer(cards);
+
+  document.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', handleEditClick));
+  document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', handleDeleteClick));
 }
 
 function escapeHtml(s) { return s ? s.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m])) : ''; }
@@ -137,12 +148,53 @@ function escapeHtml(s) { return s ? s.replace(/[&<>"']/g, m => ({ '&': '&amp;', 
 const modal = document.getElementById('postModal');
 const form = document.getElementById('postForm');
 const postTypeInput = document.getElementById('postType');
+const postIdInput = document.getElementById('postId');
 const lostFoundTypeDiv = document.getElementById('lostFoundType');
 const postTitleInput = document.getElementById('postTitle');
 const postImageInput = document.getElementById('postImage');
 
+function handleEditClick(e) {
+  const card = e.target.closest('.card');
+  const postId = card.dataset.postId;
+  const postType = card.dataset.postType;
+
+  const post = state[postType].find(p => p.id === postId);
+
+  postTypeInput.value = postType;
+  postIdInput.value = postId;
+  
+  if (postType === 'lostfound') {
+    lostFoundTypeDiv.style.display = 'block';
+    document.getElementById('itemType').value = post.type;
+    postTitleInput.value = post.item;
+    document.getElementById('postLocation').value = post.location;
+  } else {
+    lostFoundTypeDiv.style.display = 'none';
+    postTitleInput.value = post.title;
+    document.getElementById('postLocation').value = post.venue;
+  }
+
+  document.getElementById('postDesc').value = post.desc;
+  document.getElementById('postContact').value = post.contact;
+
+  modal.classList.add('show');
+}
+
+function handleDeleteClick(e) {
+  if (!confirm('Are you sure you want to delete this post?')) return;
+
+  const card = e.target.closest('.card');
+  const postId = card.dataset.postId;
+  const postType = card.dataset.postType;
+
+  state[postType] = state[postType].filter(p => p.id !== postId);
+  saveState(state);
+  renderTab(postType);
+}
+
 const showModal = (type) => {
   postTypeInput.value = type;
+  postIdInput.value = ''; // Clear for new posts
   lostFoundTypeDiv.style.display = (type === 'lostfound') ? 'block' : 'none';
   postTitleInput.placeholder = {
     'lostfound': 'e.g., Laptop, Watch, Keys',
@@ -151,65 +203,83 @@ const showModal = (type) => {
     'resources': 'e.g., Selling 1st Year Books',
     'groups': 'e.g., Competitive Programming Club'
   }[type] || '';
+  form.reset();
   modal.classList.add('show');
 };
 
-document.getElementById('addPostBtn').addEventListener('click', () => showModal('lostfound'));
-document.querySelectorAll('.sidebar .btn.secondary').forEach(button => {
-  button.addEventListener('click', (e) => showModal(e.target.dataset.postType));
-});
+const addPostBtn = document.getElementById('addPostBtn');
+if (addPostBtn) {
+  addPostBtn.addEventListener('click', () => showModal('lostfound'));
+}
 
-document.querySelector('.close-btn').addEventListener('click', () => modal.classList.remove('show'));
+const sidebarBtns = document.querySelectorAll('.sidebar .btn.secondary');
+if (sidebarBtns) {
+  sidebarBtns.forEach(button => {
+    button.addEventListener('click', (e) => showModal(e.target.dataset.postType));
+  });
+}
+
+const closeBtn = document.querySelector('.close-btn');
+if (closeBtn) {
+  closeBtn.addEventListener('click', () => modal.classList.remove('show'));
+}
 window.addEventListener('click', (e) => {
   if (e.target === modal) {
     modal.classList.remove('show');
   }
 });
 
-form.addEventListener('submit', (e) => {
-  e.preventDefault();
-  const type = postTypeInput.value;
-  const title = postTitleInput.value;
-  const desc = document.getElementById('postDesc').value;
-  const contact = document.getElementById('postContact').value;
-  const location = document.getElementById('postLocation').value;
-  const itemType = document.getElementById('itemType').value;
-  const imageFile = postImageInput.files[0];
+if (form) {
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const type = postTypeInput.value;
+    const postId = postIdInput.value;
+    const title = postTitleInput.value;
+    const desc = document.getElementById('postDesc').value;
+    const contact = document.getElementById('postContact').value;
+    const location = document.getElementById('postLocation').value;
+    const itemType = document.getElementById('itemType').value;
+    const imageFile = postImageInput.files[0];
+    
+    let newPost = { id: postId || (type[0] + Date.now()), date: new Date().toISOString().slice(0, 10), desc: desc, contact: contact };
 
-  const newId = type[0] + Date.now();
-  const date = new Date().toISOString().slice(0, 10);
-  let newPost = { id: newId, date: date, desc: desc, contact: contact };
+    if (type === 'lostfound') {
+      newPost.type = itemType;
+      newPost.item = title;
+      newPost.location = location;
+    } else {
+      newPost.title = title;
+      newPost.venue = location;
+    }
 
-  if (type === 'lostfound') {
-    newPost.type = itemType;
-    newPost.item = title;
-    newPost.location = location;
-  } else {
-    newPost.title = title;
-    newPost.venue = location;
-  }
-
-  const addPostToState = (postData) => {
-    state[type].unshift(postData);
-    saveState(state);
-    setActiveTab(type);
-    modal.classList.remove('show');
-    form.reset();
-  };
-
-  if (imageFile) {
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      newPost.image = event.target.result;
-      addPostToState(newPost);
+    const processPost = (postData) => {
+      if (postId) {
+        state[type] = state[type].map(p => p.id === postId ? { ...postData, image: postData.image || p.image } : p);
+      } else {
+        state[type].unshift(postData);
+      }
+      saveState(state);
+      setActiveTab(type);
+      modal.classList.remove('show');
+      form.reset();
     };
-    reader.readAsDataURL(imageFile);
-  } else {
-    addPostToState(newPost);
-  }
-});
 
-// Theme toggle functionality
+    if (imageFile) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        newPost.image = event.target.result;
+        processPost(newPost);
+      };
+      reader.readAsDataURL(imageFile);
+    } else {
+      processPost(newPost);
+    }
+  });
+}
+
+/**********************
+* Theme & Auth
+**********************/
 const themeToggleCheckbox = document.getElementById('checkbox');
 const body = document.body;
 
@@ -219,20 +289,111 @@ function toggleTheme() {
   localStorage.setItem(THEME_KEY, isLight ? 'light' : 'dark');
 }
 
-themeToggleCheckbox.addEventListener('change', toggleTheme);
+if (themeToggleCheckbox) {
+  themeToggleCheckbox.addEventListener('change', toggleTheme);
+}
 
-// Apply saved theme on page load
 const savedTheme = localStorage.getItem(THEME_KEY);
 if (savedTheme === 'light') {
   body.classList.add('light-theme');
-  themeToggleCheckbox.checked = true;
+  if (themeToggleCheckbox) themeToggleCheckbox.checked = true;
 } else {
-  themeToggleCheckbox.checked = false;
+  if (themeToggleCheckbox) themeToggleCheckbox.checked = false;
 }
 
-// Initial
-setActiveTab('announcements');
-searchInput.addEventListener('input', () => {
-  const active = document.querySelector('.tab.active').dataset.tab;
-  renderTab(active);
+const loginForm = document.getElementById('loginForm');
+const logoutBtn = document.getElementById('logoutBtn');
+const authButtonsContainer = document.getElementById('auth-buttons');
+
+function checkLoginStatus() {
+  const authInfo = JSON.parse(localStorage.getItem(AUTH_KEY) || '{}');
+  currentUser.username = authInfo.username;
+  currentUser.role = authInfo.role;
+  const isLoggedIn = !!currentUser.username;
+  const currentPage = window.location.pathname.split('/').pop();
+
+  if (currentPage === 'login.html') {
+    if (isLoggedIn) {
+      window.location.href = 'index.html';
+    }
+    return;
+  }
+  
+  if (currentPage === 'profile.html') {
+    if (!isLoggedIn) {
+      window.location.href = 'login.html';
+    }
+    return;
+  }
+  
+  const addPostBtn = document.getElementById('addPostBtn');
+  const sidebarButtons = document.querySelectorAll('.sidebar .student-post, .sidebar .admin-only-post');
+
+  if (authButtonsContainer) {
+    if (isLoggedIn) {
+      authButtonsContainer.innerHTML = `<button id="profileBtn" class="btn secondary">Profile</button>`;
+      if (addPostBtn) addPostBtn.style.display = 'block';
+      const profileBtn = document.getElementById('profileBtn');
+      if (profileBtn) {
+        profileBtn.addEventListener('click', () => {
+          window.location.href = 'profile.html';
+        });
+      }
+
+      // Hide or show sidebar buttons based on role
+      sidebarButtons.forEach(btn => {
+        if (currentUser.role === 'admin') {
+          btn.style.display = 'block';
+        } else {
+          if (btn.classList.contains('admin-only-post')) {
+            btn.style.display = 'none';
+          } else {
+            btn.style.display = 'block';
+          }
+        }
+      });
+    } else {
+      authButtonsContainer.innerHTML = `
+        <button id="loginBtn" class="btn secondary">Login</button>
+        <a href="signup.html" class="btn secondary">Sign Up</a>
+      `;
+      if (addPostBtn) addPostBtn.style.display = 'none';
+      const loginBtn = document.getElementById('loginBtn');
+      if (loginBtn) {
+        loginBtn.addEventListener('click', () => {
+          window.location.href = 'login.html';
+        });
+      }
+      sidebarButtons.forEach(btn => btn.style.display = 'none');
+    }
+  }
+}
+
+if (loginForm) {
+  loginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const username = document.getElementById('username').value;
+    const role = (username.toLowerCase() === 'admin') ? 'admin' : 'student';
+    localStorage.setItem(AUTH_KEY, JSON.stringify({ username, role }));
+    window.location.href = 'index.html';
+  });
+}
+
+if (logoutBtn) {
+  logoutBtn.addEventListener('click', () => {
+    localStorage.removeItem(AUTH_KEY);
+    window.location.href = 'login.html';
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  checkLoginStatus();
+  const currentPage = window.location.pathname.split('/').pop();
+  if (currentPage === '' || currentPage === 'index.html') {
+    setActiveTab('announcements');
+    searchInput.addEventListener('input', () => {
+      const active = document.querySelector('.tab.active').dataset.tab;
+      renderTab(active);
+    });
+  }
 });
