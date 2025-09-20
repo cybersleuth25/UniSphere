@@ -84,7 +84,7 @@ function handleDeleteClick(e) {
     if (!confirm('Are you sure you want to delete this post?')) return;
     const card = e.target.closest('.card'); const postId = card.dataset.postId;
     fetch(`api.php?id=${postId}`, { method: 'DELETE' }).then(res => res.json()).then(data => {
-        if (data.success) { const activeTab = document.querySelector('.tab.active')?.dataset.tab; if (activeTab) fetchPostsAndRender(activeTab); } 
+        if (data.success) { const activeTab = document.querySelector('.tab.active')?.dataset.tab; if (activeTab) fetchPostsAndRender(activeTab); }
         else { alert(data.message || 'Failed to delete post.'); }
     });
 }
@@ -95,13 +95,13 @@ if (postModal) {
         if (!isUpdate) {
             const formData = new FormData(postForm);
             fetch('api.php', { method: 'POST', body: formData }).then(res => res.json()).then(data => {
-                if (data.success) { postModal.classList.remove('show'); const activeTab = document.querySelector('.tab.active')?.dataset.tab || formData.get('postType'); fetchPostsAndRender(activeTab); } 
+                if (data.success) { postModal.classList.remove('show'); const activeTab = document.querySelector('.tab.active')?.dataset.tab || formData.get('postType'); fetchPostsAndRender(activeTab); }
                 else { alert(data.message || 'An error occurred.'); }
             });
         } else {
             const postData = { id: postId, title: document.getElementById('postTitle').value, description: document.getElementById('postDesc').value };
             fetch('api.php', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(postData) }).then(res => res.json()).then(data => {
-                if (data.success) { postModal.classList.remove('show'); const activeTab = document.querySelector('.tab.active')?.dataset.tab; if (activeTab) fetchPostsAndRender(activeTab); } 
+                if (data.success) { postModal.classList.remove('show'); const activeTab = document.querySelector('.tab.active')?.dataset.tab; if (activeTab) fetchPostsAndRender(activeTab); }
                 else { alert(data.message || 'An error occurred.'); }
             });
         }
@@ -110,13 +110,19 @@ if (postModal) {
 }
 
 /**********************
-* Theme & Auth (RESTORED)
+* Theme & Auth
 **********************/
 const themeToggleCheckbox = document.getElementById('checkbox');
 const body = document.body;
 function toggleTheme() {
   body.classList.toggle('light-theme'); const isLight = body.classList.contains('light-theme');
   localStorage.setItem('unisphere_theme', isLight ? 'light' : 'dark');
+  // Reload particles with the correct config
+  if (window.pJSDom && window.pJSDom.length > 0) {
+    window.pJSDom[0].pJS.fn.vendors.destroypJS();
+    window.pJSDom = [];
+  }
+  loadParticles();
 }
 if (themeToggleCheckbox) themeToggleCheckbox.addEventListener('change', toggleTheme);
 const savedTheme = localStorage.getItem('unisphere_theme');
@@ -155,7 +161,7 @@ if (loginForm) {
   loginForm.addEventListener('submit', (e) => {
     e.preventDefault(); const formData = new FormData(loginForm);
     fetch('login.php', { method: 'POST', body: formData }).then(response => response.json()).then(data => {
-        if (data.success) { localStorage.setItem(AUTH_KEY, JSON.stringify(data.user)); window.location.href = 'index.html'; } 
+        if (data.success) { localStorage.setItem(AUTH_KEY, JSON.stringify(data.user)); window.location.href = 'index.html'; }
         else { alert(data.message); }
     });
   });
@@ -166,10 +172,35 @@ if (signupForm) {
   signupForm.addEventListener('submit', (e) => {
     e.preventDefault(); const formData = new FormData(signupForm);
     fetch('signup.php', { method: 'POST', body: formData }).then(response => response.json()).then(data => {
-        if (data.success) { localStorage.setItem(AUTH_KEY, JSON.stringify(data.user)); window.location.href = 'index.html'; } 
+        if (data.success) { localStorage.setItem(AUTH_KEY, JSON.stringify(data.user)); window.location.href = 'index.html'; }
         else { alert(data.message); }
     });
   });
+}
+
+/**********************
+* Particles JS Loader
+**********************/
+function loadParticles() {
+  const isLight = document.body.classList.contains('light-theme');
+  const config = isLight ? 'particles-config-light.js' : 'particles-config.js';
+  
+  // Ensure particles container exists
+  let particlesContainer = document.getElementById('particles-js');
+  if (!particlesContainer) {
+    particlesContainer = document.createElement('div');
+    particlesContainer.id = 'particles-js';
+    document.body.prepend(particlesContainer);
+  }
+
+  const particleScript = document.createElement('script');
+  particleScript.src = 'https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js';
+  particleScript.onload = () => {
+    const configScript = document.createElement('script');
+    configScript.src = config;
+    document.body.appendChild(configScript);
+  };
+  document.body.appendChild(particleScript);
 }
 
 /**********************
@@ -177,6 +208,7 @@ if (signupForm) {
 **********************/
 document.addEventListener('DOMContentLoaded', () => {
     checkLoginStatus();
+    loadParticles(); // Load particles on every page
     const currentPage = window.location.pathname.split('/').pop();
 
     if (currentPage === '' || currentPage === 'index.html') {
@@ -267,18 +299,5 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else { alert(data.message); }
             });
         });
-    }
-    
-    // Load particle script only on auth/profile pages in dark mode
-    if ((document.body.classList.contains('auth-page-body') || document.body.classList.contains('profile-page-body')) && !document.body.classList.contains('light-theme')) {
-        const particleScript = document.createElement('script');
-        particleScript.src = 'https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js';
-        
-        particleScript.onload = () => {
-            const configScript = document.createElement('script');
-            configScript.src = 'particles-config.js';
-            document.body.appendChild(configScript);
-        };
-        document.body.appendChild(particleScript);
     }
 });
