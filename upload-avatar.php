@@ -12,7 +12,7 @@ if (!isset($_SESSION['user_email'])) {
 
 if (isset($_FILES['avatar'])) {
     $file = $_FILES['avatar'];
-    
+
     // File validation
     $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
     if (!in_array($file['type'], $allowedTypes)) {
@@ -35,7 +35,7 @@ if (isset($_FILES['avatar'])) {
         $user_email = $_SESSION['user_email'];
         $stmt = $conn->prepare("UPDATE users SET avatar_path = ? WHERE email = ?");
         $stmt->bind_param("ss", $destination, $user_email);
-        
+
         if ($stmt->execute()) {
             echo json_encode(['success' => true, 'message' => 'Avatar updated successfully!', 'filepath' => $destination]);
         } else {
@@ -46,6 +46,28 @@ if (isset($_FILES['avatar'])) {
     }
 } else {
     echo json_encode(['success' => false, 'message' => 'No file uploaded.']);
+}
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_FILES["avatar"])) {
+    $targetDir = "uploads/";
+    $fileName = basename($_FILES["avatar"]["name"]);
+    $targetFilePath = $targetDir . uniqid() . "_" . $fileName;
+    $fileType = strtolower(pathinfo($targetFilePath, PATHINFO_EXTENSION));
+
+    $allowedTypes = ['jpg', 'jpeg', 'png', 'gif'];
+
+    if (in_array($fileType, $allowedTypes)) {
+        if ($_FILES["avatar"]["size"] < 2 * 1024 * 1024) { // limit 2MB
+            if (move_uploaded_file($_FILES["avatar"]["tmp_name"], $targetFilePath)) {
+                echo "Avatar uploaded successfully!";
+            } else {
+                echo "Error uploading file.";
+            }
+        } else {
+            echo "File too large. Max 2MB.";
+        }
+    } else {
+        echo "Only JPG, JPEG, PNG, GIF allowed.";
+    }
 }
 
 $conn->close();

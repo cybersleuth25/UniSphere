@@ -110,16 +110,13 @@ if (postModal) {
 }
 
 /**********************
-* Theme & Auth
+* Theme & Auth (RESTORED)
 **********************/
 const themeToggleCheckbox = document.getElementById('checkbox');
 const body = document.body;
 function toggleTheme() {
   body.classList.toggle('light-theme'); const isLight = body.classList.contains('light-theme');
   localStorage.setItem('unisphere_theme', isLight ? 'light' : 'dark');
-  if (body.classList.contains('auth-page-body') || body.classList.contains('profile-page-body')) {
-      window.location.reload();
-  }
 }
 if (themeToggleCheckbox) themeToggleCheckbox.addEventListener('change', toggleTheme);
 const savedTheme = localStorage.getItem('unisphere_theme');
@@ -186,6 +183,19 @@ document.addEventListener('DOMContentLoaded', () => {
         setActiveTab('announcements');
         if (tabs) tabs.forEach(t => t.addEventListener('click', () => setActiveTab(t.dataset.tab)));
         if (searchInput) { searchInput.addEventListener('input', () => { const active = document.querySelector('.tab.active')?.dataset.tab; if(active) fetchPostsAndRender(active); }); }
+        
+        const addPostBtn = document.getElementById('addPostBtn');
+        if(addPostBtn) {
+            addPostBtn.addEventListener('click', () => {
+                const activeTab = document.querySelector('.tab.active')?.dataset.tab || 'announcements';
+                document.getElementById('postForm').reset();
+                document.getElementById('postId').value = '';
+                document.getElementById('postType').value = activeTab;
+                document.querySelector('#postModal h2').textContent = `Create New Post`;
+                if(postModal) postModal.classList.add('show');
+            });
+        }
+        
         const sidebarBtns = document.querySelectorAll('.sidebar .btn.secondary');
         sidebarBtns.forEach(button => {
             button.addEventListener('click', (e) => {
@@ -268,7 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const configScript = document.createElement('script');
             configScript.src = 'particles-config.js';
             document.body.appendChild(configScript);
-};
+        };
         document.body.appendChild(particleScript);
     }
 });

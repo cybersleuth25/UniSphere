@@ -9,9 +9,6 @@
   --muted-elements: #374151;
   --urgent-red: #e74c3c;
   --card-radius: 12px;
-  --card-bg-blue: #2c3a50;
-  --card-bg-purple: #4a3a5a;
-  --card-bg-green: #2a4c48;
   --footer-bg: #1F2937;
   --footer-text: #9CA3AF;
   --footer-heading: #F9FAFB;
@@ -26,9 +23,6 @@ body.light-theme {
   --text-color: #111827;
   --text-muted: #6B7280;
   --muted-elements: #E5E7EB;
-  --card-bg-blue: #eef2ff;
-  --card-bg-purple: #f5f3ff;
-  --card-bg-green: #ecfdf5;
   --footer-bg: #FFFFFF;
   --footer-text: #6B7280;
   --footer-heading: #111827;
@@ -77,6 +71,7 @@ body {
   margin: 0 auto;
   padding: 0 24px;
   flex-grow: 1;
+  min-height: 65vh; /* Ensures footer is pushed down */
 }
 .main { display: grid; grid-template-columns: 1fr 350px; gap: 24px; align-items: start; }
 @media (max-width: 900px) { .main { grid-template-columns: 1fr; } }
@@ -92,17 +87,15 @@ body {
   display: flex;
   gap: 12px;
   align-items: flex-start;
+  /* **CHANGE**: All cards now use the default light background */
+  background-color: var(--bg-light);
 }
-.card.announcements { background-color: var(--card-bg-blue); }
-.card.events { background-color: var(--card-bg-purple); }
-.card.lostfound { background-color: var(--card-bg-green); }
-.card.resources { background-color: var(--card-bg-blue); }
-.card.groups { background-color: var(--card-bg-purple); }
 .card:hover {
     transform: translateY(-6px);
     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
 }
 
+/* ... (the rest of your CSS file remains exactly the same as the last complete version) ... */
 /* Profile, Login, Signup Pages */
 .profile-page-body,
 .auth-page-body {
@@ -125,11 +118,8 @@ body:not(.light-theme) .auth-page-body {
 
 body.light-theme .profile-page-body,
 body.light-theme .auth-page-body {
-    background: linear-gradient(-45deg, #E0E7FF, #F3F4F6, #FFFFFF, #F3F4F6);
-    background-size: 400% 400%;
-    animation: gradient-motion 15s ease infinite;
+    background: var(--bg);
 }
-
 
 @keyframes gradient-motion {
     0% { background-position: 0% 50%; }
@@ -145,6 +135,10 @@ body.light-theme .auth-page-body {
     left: 0;
     z-index: 0;
 }
+body.light-theme #particles-js {
+    display: none;
+}
+
 
 .profile-container, .login-container {
     position: relative;
@@ -173,7 +167,6 @@ body.light-theme .login-card {
 .profile-page-actions { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
 .profile-page-actions a.btn { text-decoration: none; }
 
-/* Footer */
 .footer-section {
     background: var(--footer-bg);
     border-top: 1px solid var(--muted-elements);
@@ -192,7 +185,6 @@ body.light-theme .login-card {
 .footer-column a:hover { color: var(--primary-color); }
 .footer-bottom { text-align: center; margin-top: 25px; padding-top: 15px; border-top: 1px solid var(--muted-elements); font-size: 13px; }
 
-/* All other styles */
 .main-heading { font-size: 28px; font-weight: 600; color: var(--text-color); margin-bottom: 24px; padding-left: 10px; border-left: 4px solid var(--primary-color); }
 .controls { display: flex; gap: 12px; align-items: center; }
 .search { display: flex; gap: 8px; background: var(--bg); border-radius: 999px; padding: 8px 12px; align-items: center; border: 1px solid var(--muted-elements); transition: all 0.3s ease; }
