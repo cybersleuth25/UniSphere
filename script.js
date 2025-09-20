@@ -31,7 +31,6 @@ function generateAvatarUrl(username, seed) {
     return `https://api.dicebear.com/7.x/bottts-neutral/svg?seed=${encodeURIComponent(seedValue)}`;
 }
 function getAvatarDisplayUrl(user) {
-    // Add cache-busting query parameter to uploaded avatars
     if (user.avatar_path) return `${user.avatar_path}?t=${new Date().getTime()}`;
     return generateAvatarUrl(user.username, user.avatarSeed);
 }
@@ -89,7 +88,7 @@ function fetchPostsAndRender(tab) {
         document.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', handleEditClick));
         document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', handleDeleteClick));
         
-        // Logic to show "Read More" button only when text overflows
+        // ✅ ADDED: Logic to show "Read More" button and handle clicks
         document.querySelectorAll('.card-description').forEach(desc => {
             if (desc.scrollHeight > desc.clientHeight) {
                 const readMoreBtn = desc.nextElementSibling;
@@ -101,18 +100,17 @@ function fetchPostsAndRender(tab) {
 
         document.querySelectorAll('.read-more-btn').forEach(btn => {
           btn.addEventListener('click', (e) => {
-            const descriptionWrapper = e.target.parentElement;
-            const description = descriptionWrapper.querySelector('.card-description');
+            const description = e.target.previousElementSibling;
             const card = e.target.closest('.card');
             
             description.classList.toggle('expanded');
 
             if (description.classList.contains('expanded')) {
               e.target.textContent = 'Read Less';
-              card.style.height = 'auto';
+              card.style.height = 'auto'; // Let the card grow
             } else {
               e.target.textContent = 'Read More';
-              card.style.height = '200px';
+              card.style.height = '200px'; // Return to original height
             }
           });
         });
@@ -136,7 +134,7 @@ function fetchPostsAndRender(tab) {
 **********************/
 const postModal = document.getElementById('postModal');
 function handleEditClick(e) {
-    const card = e.target.closest('.card'); const postData = JSON.parse(card.dataset.raw);
+    const card = e.target.closest('.card'); const postData = JSON.parse(card.dataset.postRaw);
     document.getElementById('postId').value = postData.id; document.getElementById('postType').value = postData.postType;
     document.getElementById('postTitle').value = postData.title; document.getElementById('postDesc').value = postData.description;
     document.querySelector('#postModal h2').textContent = 'Edit Post'; if(postModal) postModal.classList.add('show');
@@ -389,7 +387,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// This listener is crucial for cross-tab updates (like the profile picture)
 window.addEventListener('storage', (event) => {
     if (event.key === AUTH_KEY) {
         checkLoginStatus();

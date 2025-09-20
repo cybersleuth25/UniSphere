@@ -49,16 +49,8 @@ body {
   transition: background 0.3s ease, color 0.3s ease;
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
 }
-
-/*
-MODIFIED: The animated background has been commented out.
-body:not(.light-theme) {
-  background: linear-gradient(-45deg, #111827, #1F2937, #374151, #111827);
-  background-size: 400% 400%;
-  animation: gradient-motion 15s ease infinite;
-}
-*/
 
 /* Header */
 .header {
@@ -107,14 +99,13 @@ body.light-theme .header {
   max-width: 1400px;
   margin: 0 auto;
   padding: 0 24px;
-  flex-grow: 1; /* Fixes footer positioning */
-  min-height: 65vh;
+  flex-grow: 1; 
 }
 
 .main {
   display: grid;
   grid-template-columns: 1fr 350px;
-  gap: 32px; /* MODIFIED: Increased gap to move sidebar to the right */
+  gap: 48px;
   align-items: start;
 }
 
@@ -124,7 +115,6 @@ body.light-theme .header {
   }
 }
 
-/* Ensure main content is layered above the particle background */
 .header,
 .main-content,
 .footer-section {
@@ -154,7 +144,7 @@ body.light-theme .header {
   gap: 12px;
   align-items: flex-start;
   background-color: var(--bg-light);
-  height: 200px; /* Increased height for a longer box */
+  height: 200px;
 }
 
 .card-content {
@@ -162,9 +152,10 @@ body.light-theme .header {
   display: flex;
   flex-direction: column;
   height: 100%;
-  overflow: hidden; /* Prevent content from spilling out */
+  overflow: hidden;
 }
 
+/* ✅ ADDED: Styles for Read More functionality */
 .description-wrapper {
   flex-grow: 1;
   overflow: hidden;
@@ -207,7 +198,6 @@ body.light-theme .header {
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
 }
 
-/* LIGHT THEME ONLY CARD STYLES */
 body.light-theme .card {
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
@@ -231,18 +221,6 @@ body.light-theme .card:hover {
 body.light-theme .profile-page-body,
 body.light-theme .auth-page-body {
   background: var(--bg);
-}
-
-@keyframes gradient-motion {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
 }
 
 #particles-js {
@@ -363,9 +341,9 @@ body.light-theme .login-card {
 }
 
 .footer-content {
-  display: flex; /* MODIFIED: Using flexbox for better alignment */
-  justify-content: space-around; /* MODIFIED: Spacing columns evenly */
-  flex-wrap: wrap; /* Allow wrapping on smaller screens */
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
   gap: 20px;
   max-width: 1200px;
   margin: 0 auto;
@@ -634,8 +612,8 @@ input:checked+.slider:before {
 }
 
 .card .actions {
-  margin-top: auto; /* MODIFIED: This pushes the buttons to the bottom */
-  padding-top: 8px; /* Add some space above the buttons */
+  margin-top: auto;
+  padding-top: 8px;
   display: flex;
   gap: 8px;
 }
@@ -645,6 +623,7 @@ input:checked+.slider:before {
   border-radius: 12px;
   padding: 16px;
   border: 1px solid var(--muted-elements);
+  margin-top: -60px; 
 }
 
 body.light-theme .sidebar {
@@ -757,22 +736,6 @@ body.light-theme .form-group select:focus {
   min-height: 100px;
 }
 
-.profile-form .form-group {
-  text-align: left;
-}
-
-.profile-form input,
-.profile-form textarea {
-  background-color: var(--bg-light);
-}
-
-.profile-actions {
-  margin-top: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
 .skeleton-card {
   background-color: var(--bg-light);
   border-radius: var(--card-radius);
@@ -808,78 +771,3 @@ body.light-theme .form-group select:focus {
     opacity: .5;
   }
 }
-
-/* Integrated and Theme-Aware Post Card Styles */
-.post-card {
-  background: var(--bg-light);
-  border-radius: 8px;
-  padding: 15px;
-  margin-bottom: 15px;
-  text-align: left;
-  transition: transform 0.2s, box-shadow 0.2s;
-  border: 1px solid var(--muted-elements);
-}
-
-.post-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
-}
-
-/* LIGHT THEME ONLY POST-CARD STYLES */
-body.light-theme .post-card {
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-}
-body.light-theme .post-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-}
-
-.post-card strong {
-  color: var(--primary-color);
-  font-size: 15px;
-}
-
-.post-card p {
-  margin: 8px 0;
-  color: var(--text-color);
-}
-
-.post-card small {
-  display: block;
-  margin-top: 8px;
-  color: var(--text-muted);
-  font-size: 12px;
-}
-
-/* Main Page Entrance Animations */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.main-heading,
-.sidebar,
-.card,
-.post-card {
-  opacity: 0;
-  animation: fadeInUp 0.5s ease-out forwards;
-}
-
-.main-heading {
-  animation-delay: 0.1s;
-}
-
-.sidebar {
-  animation-delay: 0.2s;
-}
-
-.cards .card:nth-child(1) { animation-delay: 0.3s; }
-.cards .card:nth-child(2) { animation-delay: 0.4s; }
-.cards .card:nth-child(3) { animation-delay: 0.5s; }
-.cards .card:nth-child(4) { animation-delay: 0.6s; }
