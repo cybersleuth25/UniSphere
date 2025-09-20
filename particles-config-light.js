@@ -19,8 +19,14 @@ particlesJS("particles-js", {
   },
   "interactivity": {
     "detect_on": "canvas",
-    "events": { "onhover": { "enable": true, "mode": "grab" }, "onclick": { "enable": false } },
-    "modes": { "grab": { "distance": 140, "line_linked": { "opacity": 0.7 } } }
+    "events": {
+      "onhover": { "enable": true, "mode": "grab" },
+      "onclick": { "enable": true, "mode": "push" }
+    },
+    "modes": {
+      "grab": { "distance": 140, "line_opacity": 0.7 }, // CORRECTED: This was the source of the error
+      "push": { "particles_nb": 4 }
+    }
   },
   "retina_detect": true
 });

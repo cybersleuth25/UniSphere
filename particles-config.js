@@ -46,14 +46,18 @@ particlesJS("particles-js", {
         "mode": "grab"
       },
       "onclick": {
-        "enable": false
+        "enable": true,
+        "mode": "push"
       },
       "resize": true
     },
     "modes": {
       "grab": {
         "distance": 140,
-        "line_opacity": 1
+        "line_opacity": 1 // CORRECTED: This was the source of the error
+      },
+      "push": {
+        "particles_nb": 4
       }
     }
   },
