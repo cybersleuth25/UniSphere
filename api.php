@@ -2,136 +2,136 @@
 session_start();
 include 'connect.php';
 
-// Set headers for CORS and content type
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *'); // Allow requests from any origin
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
-// Handle preflight OPTIONS request
 if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
     http_response_code(200);
     exit;
 }
 
-// Check for authentication for all methods except GET
-if ($_SERVER['REQUEST_METHOD'] !== 'GET' && !isset($_SESSION['user_email'])) {
-    http_response_code(401);
-    echo json_encode(["error" => "Authentication required."]);
-    exit;
-}
-
-// Get request method and body
 $method = $_SERVER['REQUEST_METHOD'];
-$request_body = json_decode(file_get_contents('php://input'), true);
 
 switch ($method) {
     case 'GET':
-        // No authentication needed for read operations
-        $sql = "SELECT * FROM posts ORDER BY date DESC";
-        $result = $conn->query($sql);
-        $posts = [];
-        if ($result->num_rows > 0) {
-            while ($row = $result->fetch_assoc()) {
-                $posts[] = $row;
-            }
+        $postType = $_GET['postType'] ?? '';
+        $search = $_GET['search'] ?? '';
+
+        if (empty($postType)) {
+            echo json_encode([]);
+            exit;
         }
+
+        if (!empty($search)) {
+            $searchTerm = "%{$search}%";
+            $stmt = $conn->prepare("SELECT * FROM posts WHERE postType = ? AND (title LIKE ? OR description LIKE ?) ORDER BY date DESC");
+            $stmt->bind_param("sss", $postType, $searchTerm, $searchTerm);
+        } else {
+            $stmt = $conn->prepare("SELECT * FROM posts WHERE postType = ? ORDER BY date DESC");
+            $stmt->bind_param("s", $postType);
+        }
+        
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $posts = $result->fetch_all(MYSQLI_ASSOC);
         echo json_encode($posts);
         break;
 
     case 'POST':
-        $postType = $request_body['postType'];
-        $author = $_SESSION['user_email']; // Set author from session
-
-        // Authorization check for Announcements and Events
-        if (($_SESSION['user_role'] !== 'admin') && ($postType === 'announcements' || $postType === 'events')) {
-            http_response_code(403);
-            echo json_encode(["success" => false, "message" => "Permission denied. Only admins can create announcements or events."]);
+        if (!isset($_SESSION['user_email'])) {
+            http_response_code(401);
+            echo json_encode(["success" => false, "message" => "Authentication required."]);
             exit;
         }
 
-        $id = uniqid(); // Generate a unique ID on the server side
-        $title = $request_body['title'] ?? null;
-        $description = $request_body['description'] ?? null;
-        $date = $request_body['date'] ?? date('Y-m-d');
-        $contact = $request_body['contact'] ?? null;
-        $image = $request_body['image'] ?? null;
-        $urgent = $request_body['urgent'] ?? 0;
-        $itemType = $request_body['itemType'] ?? null;
-        $location = $request_body['location'] ?? null;
+        $postType = $_POST['postType'];
+        $author = $_SESSION['user_email'];
 
-        $stmt = $conn->prepare("INSERT INTO posts (id, postType, title, description, date, contact, image, urgent, itemType, location, author) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssssssissss", $id, $postType, $title, $description, $date, $contact, $image, $urgent, $itemType, $location, $author);
+        if (($_SESSION['user_role'] !== 'admin') && ($postType === 'announcements' || $postType === 'events')) {
+            http_response_code(403);
+            echo json_encode(["success" => false, "message" => "Permission denied."]);
+            exit;
+        }
+
+        $id = uniqid('post_');
+        $title = $_POST['title'] ?? 'No Title';
+        $description = $_POST['description'] ?? '';
+        $date = date('Y-m-d');
+        $imagePath = null;
+
+        if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
+            $file = $_FILES['image'];
+            $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+            if (in_array($file['type'], $allowedTypes) && $file['size'] < 5 * 1024 * 1024) { // 5MB limit
+                $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+                $filename = uniqid('postimg_', true) . '.' . $extension;
+                $destination = 'uploads/' . $filename;
+                if (move_uploaded_file($file['tmp_name'], $destination)) {
+                    $imagePath = $destination;
+                }
+            }
+        }
+
+        $stmt = $conn->prepare("INSERT INTO posts (id, postType, title, description, date, author, image) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("sssssss", $id, $postType, $title, $description, $date, $author, $imagePath);
 
         if ($stmt->execute()) {
             echo json_encode(["success" => true, "message" => "Post created successfully."]);
         } else {
             echo json_encode(["success" => false, "message" => "Error: " . $stmt->error]);
         }
-        $stmt->close();
         break;
 
     case 'PUT':
+        if (!isset($_SESSION['user_email'])) { http_response_code(401); exit; }
+        
+        $request_body = json_decode(file_get_contents('php://input'), true);
         $id = $request_body['id'];
-        $title = $request_body['title'] ?? null;
-        $description = $request_body['description'] ?? null;
-        $contact = $request_body['contact'] ?? null;
-        $image = $request_body['image'] ?? null;
-        $urgent = $request_body['urgent'] ?? 0;
-        $itemType = $request_body['itemType'] ?? null;
-        $location = $request_body['location'] ?? null;
-        $author = $_SESSION['user_email']; // Set author from session
-
-        // Authorization check: User can only update their own posts
+        $title = $request_body['title'];
+        $description = $request_body['description'];
+        $author = $_SESSION['user_email'];
+        
         $check = $conn->prepare("SELECT author FROM posts WHERE id = ?");
         $check->bind_param("s", $id);
         $check->execute();
-        $result = $check->get_result();
-        $post = $result->fetch_assoc();
+        $post = $check->get_result()->fetch_assoc();
 
-        if ($post['author'] !== $author && $_SESSION['user_role'] !== 'admin') {
-            http_response_code(403);
-            echo json_encode(["success" => false, "message" => "Permission denied. You can only update your own posts."]);
-            exit;
-        }
-
-        $stmt = $conn->prepare("UPDATE posts SET title=?, description=?, contact=?, image=?, urgent=?, itemType=?, location=? WHERE id=?");
-        $stmt->bind_param("sssissss", $title, $description, $contact, $image, $urgent, $itemType, $location, $id);
-
-        if ($stmt->execute()) {
-            echo json_encode(["success" => true, "message" => "Post updated successfully."]);
+        if ($post && ($post['author'] === $author || $_SESSION['user_role'] === 'admin')) {
+            $stmt = $conn->prepare("UPDATE posts SET title = ?, description = ? WHERE id = ?");
+            $stmt->bind_param("sss", $title, $description, $id);
+            if ($stmt->execute()) {
+                echo json_encode(["success" => true, "message" => "Post updated successfully."]);
+            } else {
+                echo json_encode(["success" => false, "message" => "Update failed."]);
+            }
         } else {
-            echo json_encode(["success" => false, "message" => "Error: " . $stmt->error]);
+            http_response_code(403);
+            echo json_encode(["success" => false, "message" => "Permission denied."]);
         }
-        $stmt->close();
         break;
 
     case 'DELETE':
+        if (!isset($_SESSION['user_email'])) { http_response_code(401); exit; }
+        
         $id = $_GET['id'];
-        $author = $_SESSION['user_email']; // Set author from session
-
-        // Authorization check: User can only delete their own posts
+        $author = $_SESSION['user_email'];
+        
         $check = $conn->prepare("SELECT author FROM posts WHERE id = ?");
         $check->bind_param("s", $id);
         $check->execute();
-        $result = $check->get_result();
-        $post = $result->fetch_assoc();
+        $post = $check->get_result()->fetch_assoc();
 
-        if ($post['author'] !== $author && $_SESSION['user_role'] !== 'admin') {
-            http_response_code(403);
-            echo json_encode(["success" => false, "message" => "Permission denied. You can only delete your own posts."]);
-            exit;
-        }
-
-        $stmt = $conn->prepare("DELETE FROM posts WHERE id=?");
-        $stmt->bind_param("s", $id);
-
-        if ($stmt->execute()) {
-            echo json_encode(["success" => true, "message" => "Post deleted successfully."]);
+        if ($post && ($post['author'] === $author || $_SESSION['user_role'] === 'admin')) {
+            $stmt = $conn->prepare("DELETE FROM posts WHERE id = ?");
+            $stmt->bind_param("s", $id);
+            if ($stmt->execute()) {
+                echo json_encode(["success" => true, "message" => "Post deleted successfully."]);
+            } else {
+                echo json_encode(["success" => false, "message" => "Delete failed."]);
+            }
         } else {
-            echo json_encode(["success" => false, "message" => "Error: " . $stmt->error]);
+            http_response_code(403);
+            echo json_encode(["success" => false, "message" => "Permission denied."]);
         }
-        $stmt->close();
         break;
 }
 

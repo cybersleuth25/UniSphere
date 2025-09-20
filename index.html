@@ -1,6 +1,5 @@
 <!doctype html>
 <html lang="en">
-
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -8,22 +7,22 @@
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet"
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@600&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
-
 <body>
 
   <header class="header">
     <div class="brand">
-      <div><img src="cybersleuth25/unisphere/UniSphere-c6df25c724dd245816fd8847cd3c8b067d23829c/Logo.jpg" alt="UniSphere Logo" class="logo"></div>
+      <div><img src="Logo.jpg" alt="UniSphere Logo" class="logo"></div>
       <div class="title">
         <h1>UniSphere</h1>
-        <p id="tagline">Stay Updated. Stay Connected.</p>
+        <p>Stay Updated. Stay Connected.</p>
       </div>
     </div>
-
     <div class="controls">
       <div class="search" title="Search posts">
-        🔎 <input id="searchInput" placeholder="Search announcements, events, resources..." />
+        <i class="fas fa-search"></i>
+        <input id="searchInput" placeholder="Search..." />
       </div>
       <div class="theme-switch-wrapper">
         <label class="theme-switch" for="checkbox">
@@ -31,152 +30,111 @@
           <div class="slider round"></div>
         </label>
       </div>
-      <div id="auth-buttons" class="auth-buttons-wrapper">
-          </div>
+      <div id="auth-buttons" class="auth-buttons-wrapper"></div>
       <button class="btn" id="addPostBtn" style="display:none">+ Post</button>
     </div>
   </header>
 
-  <main class="main">
-    <section>
-      <nav class="tabs" role="tablist" aria-label="Main tabs">
-        <div class="tab active" data-tab="announcements">Announcements</div>
-        <div class="tab" data-tab="events">Events</div>
-        <div class="tab" data-tab="lostfound">Lost &amp; Found</div>
-        <div class="tab" data-tab="resources">Resource Exchange</div>
-        <div class="tab" data-tab="groups">Community Connect</div>
-      </nav>
+  <div class="main-content">
+    
+    <h1 id="welcomeMessage" class="main-heading"></h1>
 
-      <div id="contentArea">
-      </div>
+    <main class="main">
+      <section>
+        <nav class="tabs" role="tablist" aria-label="Main tabs">
+          <div class="tab active" data-tab="announcements">Announcements</div>
+          <div class="tab" data-tab="events">Events</div>
+          <div class="tab" data-tab="lostfound">Lost &amp; Found</div>
+          <div class="tab" data-tab="resources">Resource Exchange</div>
+          <div class="tab" data-tab="groups">Community Connect</div>
+        </nav>
+        <div id="contentArea"></div>
+      </section>
+      <aside class="sidebar">
+        <h3 style="margin-top:0">Quick Actions</h3>
+        <p class="small">Easily create a new post by selecting a category.</p>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <button class="btn secondary admin-only-post" data-post-type="announcements">Add Announcement</button>
+          <button class="btn secondary admin-only-post" data-post-type="events">Add Event</button>
+          <button class="btn secondary student-post" data-post-type="lostfound">Add Lost/Found</button>
+          <button class="btn secondary student-post" data-post-type="resources">Add Resource</button>
+          <button class="btn secondary student-post" data-post-type="groups">Create Group</button>
+        </div>
+        <hr style="margin:16px 0; border:none; border-top:1px solid var(--muted-elements)">
+        <h4 style="margin:6px 0">About UniSphere</h4>
+        <p class="small">A student-centric hub for announcements, events, resource sharing, and more.</p>
+      </aside>
+    </main>
+  </div>
 
-      <div class="footer">Data for <strong>UniSphere</strong>. Data saved locally (browser storage).</div>
-    </section>
-
-    <aside class="sidebar">
-      <h3 style="margin-top:0">Quick Actions</h3>
-      <p class="small">Easily create a new post by selecting a category. The data is saved in your browser's local
-        storage.</p>
-
-      <div style="display:flex; flex-direction:column; gap:8px;">
-        <button class="btn secondary admin-only-post" data-post-type="announcements">Add Announcement</button>
-        <button class="btn secondary admin-only-post" data-post-type="events">Add Event</button>
-        <button class="btn secondary student-post" data-post-type="lostfound">Add Lost/Found</button>
-        <button class="btn secondary student-post" data-post-type="resources">Add Resource</button>
-        <button class="btn secondary student-post" data-post-type="groups">Create Group</button>
-      </div>
-
-      <hr style="margin:16px 0; border:none; border-top:1px solid var(--muted-elements)">
-
-      <h4 style="margin:6px 0">About UniSphere</h4>
-      <p class="small">A student-centric hub for announcements, events, resource sharing, and more, tailored
-        specifically for the AIT community.</p>
-    </aside>
-  </main>
+  <footer class="footer-section">
+    <div class="footer-top">
+        <h3>About UniSphere</h3>
+        <p>A student-centric hub for announcements, events, resource sharing, and more.</p>
+    </div>
+    <div class="footer-content">
+        <div class="footer-column">
+            <h3>ABOUT US</h3>
+            <ul>
+                <li><a href="#">Pricing</a></li>
+                <li><a href="#">Testimonials</a></li>
+                <li><a href="#">FAQs</a></li>
+            </ul>
+        </div>
+        <div class="footer-column">
+            <h3>SUPPORT</h3>
+            <ul>
+                <li><a href="#">Help Center</a></li>
+                <li><a href="#">Terms</a></li>
+                <li><a href="#">Privacy</a></li>
+            </ul>
+        </div>
+        <div class="footer-column">
+            <h3>COMMUNITY</h3>
+            <ul>
+                <li><a href="#">Forum</a></li>
+                <li><a href="#">Events</a></li>
+                <li><a href="#">Partners</a></li>
+            </ul>
+        </div>
+        <div class="footer-column">
+            <h3>SOCIAL <i class="fas fa-arrow-right"></i></h3>
+            <ul>
+                <li><a href="#">Facebook</a></li>
+                <li><a href="#">Instagram</a></li>
+                <li><a href="#">Twitter</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        &copy; 2025 UniSphere. All rights reserved.
+    </div>
+  </footer>
 
   <div id="postModal" class="modal">
     <div class="modal-content">
       <span class="close-btn">&times;</span>
       <h2>Create New Post</h2>
-      <form id="postForm">
+      <form id="postForm" enctype="multipart/form-data">
         <input type="hidden" id="postType" name="postType">
         <input type="hidden" id="postId" name="postId">
-
         <div class="form-group">
           <label for="postTitle">Title</label>
-          <input type="text" id="postTitle" name="postTitle" required>
+          <input type="text" id="postTitle" name="title" required>
         </div>
-
         <div class="form-group">
           <label for="postDesc">Description</label>
-          <textarea id="postDesc" name="postDesc" required></textarea>
+          <textarea id="postDesc" name="description" required></textarea>
         </div>
-
-        <div class="form-group" id="lostFoundType" style="display: none;">
-          <label for="itemType">Type</label>
-          <select id="itemType" name="itemType">
-            <option value="lost">Lost</option>
-            <option value="found">Found</option>
-          </select>
-        </div>
-
         <div class="form-group">
           <label for="postImage">Image (Optional)</label>
-          <input type="file" id="postImage" accept="image/*" name="postImage">
+          <input type="file" id="postImage" name="image" accept="image/*">
         </div>
-
-        <div class="form-group">
-          <label for="postContact">Contact</label>
-          <input type="text" id="postContact" name="postContact" required>
-        </div>
-
-        <div class="form-group">
-          <label for="postLocation">Location/Venue</label>
-          <input type="text" id="postLocation" name="postLocation">
-        </div>
-
         <button type="submit" class="btn">Submit Post</button>
       </form>
     </div>
   </div>
-<main class="main">
-    </main>
-  
-  <footer class="footer-section">
-    <div class="footer-content">
-      <div class="footer-brand">
-        <img src="cybersleuth25/unisphere/UniSphere-99ccd29c2299a2d7adfa1a4f13848af9e24ee883/Logo.jpg" alt="UniSphere Logo" class="footer-logo">
-        <div class="title">
-          <h1>UniSphere</h1>
-          <p id="tagline">Stay Updated. Stay Connected.</p>
-        </div>
-      </div>
-      <div class="footer-links">
-        <div>
-          <h3>Product</h3>
-          <ul>
-            <li><a href="#">Features</a></li>
-            <li><a href="#">Pricing</a></li>
-            <li><a href="#">Testimonials</a></li>
-            <li><a href="#">Integration</a></li>
-          </ul>
-        </div>
-        <div>
-          <h3>Company</h3>
-          <ul>
-            <li><a href="#">FAQs</a></li>
-            <li><a href="#">About Us</a></li>
-            <li><a href="#">Privacy Policy</a></li>
-            <li><a href="#">Terms of Services</a></li>
-          </ul>
-        </div>
-        <div>
-          <h3>Resources</h3>
-          <ul>
-            <li><a href="#">Blog</a></li>
-            <li><a href="#">Changelog</a></li>
-            <li><a href="#">Brand</a></li>
-            <li><a href="#">Help</a></li>
-          </ul>
-        </div>
-        <div>
-          <h3>Social Links</h3>
-          <ul class="social-links">
-            <li><a href="#"><img src="https://placehold.co/24x24" alt="Facebook"></a></li>
-            <li><a href="#"><img src="https://placehold.co/24x24" alt="Instagram"></a></li>
-            <li><a href="#"><img src="https://placehold.co/24x24" alt="YouTube"></a></li>
-            <li><a href="#"><img src="https://placehold.co/24x24" alt="LinkedIn"></a></li>
-          </ul>
-        </div>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <p>© 2024 UniSphere. All rights reserved.</p>
-    </div>
-  </footer>
 
-  <div id="postModal" class="modal">
-    </div>
   <script src="script.js"></script>
 </body>
 </html>

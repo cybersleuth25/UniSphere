@@ -8,25 +8,43 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $token = $_POST['token'] ?? '';
     $new_password = $_POST['newPassword'];
 
-    // In a real application, you would validate the token and its expiry
-    // For this example, we assume the token is valid and corresponds to a user
-    // A secure implementation would store a reset token in the database with a timestamp
-    // and a link to the user, then validate it here.
+    if (empty($token) || empty($new_password)) {
+        http_response_code(400);
+        echo json_encode(["success" => false, "message" => "Token and password are required."]);
+        exit;
+    }
+
+    $token_hash = hash('sha256', $token);
+
+    $stmt = $conn->prepare("SELECT email, reset_token_expiry FROM users WHERE reset_token = ?");
+    $stmt->bind_param("s", $token_hash);
+    $stmt->execute();
+    $result = $stmt->get_result();
     
-    // For now, let's just assume we have the user's email to update their password.
-    // This is not a secure practice for a real-world application.
-    $email_to_update = "user@example.com"; // Placeholder email
+    if ($result->num_rows > 0) {
+        $user = $result->fetch_assoc();
+        
+        // Check if token is expired
+        if (strtotime($user['reset_token_expiry']) <= time()) {
+            http_response_code(400);
+            echo json_encode(["success" => false, "message" => "Reset link has expired."]);
+            exit;
+        }
 
-    $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
+        // Token is valid, update the password and clear the token
+        $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
+        $update = $conn->prepare("UPDATE users SET password = ?, reset_token = NULL, reset_token_expiry = NULL WHERE email = ?");
+        $update->bind_param("ss", $hashed_password, $user['email']);
 
-    $stmt = $conn->prepare("UPDATE users SET password = ? WHERE email = ?");
-    $stmt->bind_param("ss", $hashed_password, $email_to_update);
-
-    if ($stmt->execute()) {
-        echo json_encode(["success" => true, "message" => "Password has been reset successfully."]);
+        if ($update->execute()) {
+            echo json_encode(["success" => true, "message" => "Password has been reset successfully."]);
+        } else {
+            http_response_code(500);
+            echo json_encode(["success" => false, "message" => "Error resetting password."]);
+        }
     } else {
-        http_response_code(500);
-        echo json_encode(["success" => false, "message" => "Error resetting password: " . $stmt->error]);
+        http_response_code(400);
+        echo json_encode(["success" => false, "message" => "Invalid reset link."]);
     }
 
 } else {
