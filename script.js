@@ -19,7 +19,8 @@ function generateAvatarUrl(username, seed) {
     return `https://api.dicebear.com/7.x/bottts-neutral/svg?seed=${encodeURIComponent(seedValue)}`;
 }
 function getAvatarDisplayUrl(user) {
-    if (user.avatar_path) return user.avatar_path + '?t=' + new Date().getTime();
+    // Add cache-busting query parameter to uploaded avatars
+    if (user.avatar_path) return `${user.avatar_path}?t=${new Date().getTime()}`;
     return generateAvatarUrl(user.username, user.avatarSeed);
 }
 /**********************
@@ -117,7 +118,6 @@ const body = document.body;
 function toggleTheme() {
   body.classList.toggle('light-theme'); const isLight = body.classList.contains('light-theme');
   localStorage.setItem('unisphere_theme', isLight ? 'light' : 'dark');
-  // Reload particles with the correct config
   if (window.pJSDom && window.pJSDom.length > 0) {
     window.pJSDom[0].pJS.fn.vendors.destroypJS();
     window.pJSDom = [];
@@ -184,15 +184,12 @@ if (signupForm) {
 function loadParticles() {
   const isLight = document.body.classList.contains('light-theme');
   const config = isLight ? 'particles-config-light.js' : 'particles-config.js';
-  
-  // Ensure particles container exists
   let particlesContainer = document.getElementById('particles-js');
   if (!particlesContainer) {
     particlesContainer = document.createElement('div');
     particlesContainer.id = 'particles-js';
     document.body.prepend(particlesContainer);
   }
-
   const particleScript = document.createElement('script');
   particleScript.src = 'https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js';
   particleScript.onload = () => {
@@ -208,7 +205,7 @@ function loadParticles() {
 **********************/
 document.addEventListener('DOMContentLoaded', () => {
     checkLoginStatus();
-    loadParticles(); // Load particles on every page
+    loadParticles();
     const currentPage = window.location.pathname.split('/').pop();
 
     if (currentPage === '' || currentPage === 'index.html') {
@@ -264,8 +261,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const formData = new FormData(); formData.append('avatar', file);
             fetch('upload-avatar.php', { method: 'POST', body: formData }).then(res => res.json()).then(data => {
                 if (data.success) {
-                    let user = getAuthInfo(); user.avatar_path = data.filepath;
+                    let user = getAuthInfo(); 
+                    // ✅ FINAL FIX for Profile Picture Update
+                    user.avatar_path = data.filepath;
                     localStorage.setItem(AUTH_KEY, JSON.stringify(user));
+                    // The getAvatarDisplayUrl function now handles cache busting
                     avatarImg.src = getAvatarDisplayUrl(user);
                 } else { alert(data.message); }
             });
@@ -299,5 +299,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else { alert(data.message); }
             });
         });
+    }
+});
+
+// This listener is crucial for cross-tab updates (like the profile picture)
+window.addEventListener('storage', (event) => {
+    if (event.key === AUTH_KEY) {
+        checkLoginStatus();
     }
 });

@@ -9,7 +9,8 @@ if (!isset($_SESSION['user_email'])) {
 
 $current_user_email = $_SESSION['user_email'];
 $user = null;
-$stmt = $conn->prepare("SELECT username, email, bio, avatar_path FROM users WHERE email = ?");
+// FIXED: Added the 'role' column to the database query
+$stmt = $conn->prepare("SELECT username, email, bio, avatar_path, role FROM users WHERE email = ?");
 $stmt->bind_param("s", $current_user_email);
 if ($stmt->execute()) {
     $result = $stmt->get_result();
@@ -75,8 +76,6 @@ if ($stmt->execute()) {
     </div>
     
     <script> const serverData = { user: <?php echo json_encode($user); ?> }; </script>
-    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
-    <script src="particles-config.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
