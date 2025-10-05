@@ -5,9 +5,7 @@ include 'connect.php';
 $is_own_profile = false;
 $user = null;
 
-// Determine which user profile to display
 if (isset($_GET['username'])) {
-    // Visiting someone else's profile
     $username = $_GET['username'];
     $stmt = $conn->prepare("SELECT username, email, bio, avatar_path, role, branch, semester FROM users WHERE username = ?");
     $stmt->bind_param("s", $username);
@@ -15,12 +13,10 @@ if (isset($_GET['username'])) {
     $result = $stmt->get_result();
     $user = $result->fetch_assoc();
     
-    // Check if this is also the logged-in user's profile
     if (isset($_SESSION['user_email']) && $user && $_SESSION['user_email'] === $user['email']) {
         $is_own_profile = true;
     }
 } elseif (isset($_SESSION['user_email'])) {
-    // Viewing own profile
     $is_own_profile = true;
     $current_user_email = $_SESSION['user_email'];
     $stmt = $conn->prepare("SELECT username, email, bio, avatar_path, role, branch, semester FROM users WHERE email = ?");
@@ -29,12 +25,10 @@ if (isset($_GET['username'])) {
     $result = $stmt->get_result();
     $user = $result->fetch_assoc();
 } else {
-    // Not logged in and not visiting a specific profile, so redirect to login
     header("Location: login.html");
     exit();
 }
 
-// If no user was found in the database, show a proper error page
 if (!$user) {
     echo "<!DOCTYPE html><html><head><title>User Not Found</title><link rel=\"stylesheet\" href=\"style.css\"></head><body class='auth-page-body'><div class='login-container'><div class='login-card'><h1>User Not Found</h1><p>The profile you are looking for does not exist.</p><a href='index.html' class='btn'>Back to Home</a></div></div></body></html>";
     exit();
@@ -52,11 +46,14 @@ if (!$user) {
 </head>
 <body class="profile-page-body">
 
-    <div id="particles-js"></div>
+    <div class="aurora-background">
+        <div class="aurora-blob"></div>
+        <div class="aurora-blob"></div>
+        <div class="aurora-blob"></div>
+    </div>
 
     <div class="profile-container">
         <div class="profile-avatar-wrapper">
-            <!-- The src is intentionally left blank; it will be set by script.js -->
             <img src="" alt="Profile Avatar" id="profileAvatarImg" class="profile-avatar">
             <?php if ($is_own_profile): ?>
             <input type="file" id="avatarUploadInput" style="display: none;" accept="image/png, image/jpeg, image/gif">
@@ -73,7 +70,7 @@ if (!$user) {
         <p id="emailSubheading" class="subheading"><?php echo htmlspecialchars($user['email'] ?? 'No email'); ?></p>
         
         <div class="profile-details subheading" style="margin-top: -20px; margin-bottom: 20px;">
-            <span><?php echo htmlspecialchars($user['branch'] ?? 'N/A'); ?></span>
+            <span><?php echo (!empty($user['branch']) ? htmlspecialchars($user['branch']) : 'N/A'); ?></span>
             &bull;
             <span>Semester <?php echo htmlspecialchars($user['semester'] ?? 'N/A'); ?></span>
         </div>
@@ -85,14 +82,12 @@ if (!$user) {
             <a href="logout.php" class="btn secondary">Logout</a>
         </div>
         <?php else: ?>
-        <div class="profile-page-actions">
-            <a href="index.html" class="btn secondary">Main Page</a>
-        </div>
+         <div class="profile-page-actions friend-button-container" data-user-email="<?php echo htmlspecialchars($user['email']); ?>">
+            </div>
         <?php endif; ?>
 
     </div>
 
-    <!-- Edit Profile Modal (only shown for own profile) -->
     <?php if ($is_own_profile): ?>
     <div id="editProfileModal" class="modal">
         <div class="modal-content">
@@ -117,14 +112,12 @@ if (!$user) {
     </div>
     <?php endif; ?>
     
-    <!-- This script tag is crucial for passing PHP data to our JavaScript file -->
     <script>
         const serverData = {
             user: <?php echo json_encode($user); ?>,
             isOwnProfile: <?php echo json_encode($is_own_profile); ?>
         };
     </script>
-    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.0.2/marked.min.js"></script>
     <script src="script.js"></script>
 </body>

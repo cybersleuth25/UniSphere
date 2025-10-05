@@ -23,8 +23,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         http_response_code(409);
         echo json_encode(["success" => false, "message" => "Email already registered. Try logging in."]);
     } else {
+        // THE FIX IS ON THIS LINE: The 'i' for integer was changed to 's' for string.
         $stmt = $conn->prepare("INSERT INTO users (username, email, password, role, branch, semester) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssssis", $username, $email, $hashed_password, $role, $branch, $semester);
+        $stmt->bind_param("ssssss", $username, $email, $hashed_password, $role, $branch, $semester);
 
         if ($stmt->execute()) {
             $_SESSION['user_email'] = $email;

@@ -96,7 +96,8 @@ function fetchPostsAndRender(tab, category = '') {
             const isAdmin = currentUser.role === 'admin';
             const showEditDelete = isAdmin || isAuthor;
             const imageHtml = x.image ? `<div class="thumb image" style="background-image: url('${x.image}')"></div>` : `<div class="thumb">${x.postType.slice(0, 3).toUpperCase()}</div>`;
-            const statusTag = x.status ? `<div class="status-tag ${x.status.toLowerCase()}">${x.status}</div>` : '';
+            
+            const statusTag = (x.postType === 'lostfound' && x.status) ? `<div class="status-tag ${x.status.toLowerCase()}">${x.status}</div>` : '';
             
             const unsafeHtml = x.description ? marked.parse(x.description) : '';
             const descriptionHtml = DOMPurify.sanitize(unsafeHtml);
@@ -171,14 +172,19 @@ const postModal = document.getElementById('postModal');
 function handleEditClick(e) {
     const card = e.target.closest('.card'); 
     const postData = JSON.parse(card.dataset.postRaw);
-    document.getElementById('postId').value = postData.id;
     
     setupPostModal(postData.postType, true);
 
+    document.getElementById('postId').value = postData.id;
     document.getElementById('postTitle').value = postData.title; 
     document.getElementById('postDesc').value = postData.description;
-    if (postData.status) document.getElementById('postStatus').value = postData.status;
-    if (postData.category) document.getElementById('postCategory').value = postData.category;
+    
+    if (document.getElementById('postStatus') && postData.status) {
+        document.getElementById('postStatus').value = postData.status;
+    }
+    if (document.getElementById('postCategory') && postData.category) {
+        document.getElementById('postCategory').value = postData.category;
+    }
     
     if(postModal) postModal.classList.add('show');
 }
@@ -214,30 +220,57 @@ if (postModal) {
         
         if (isUpdate) {
             const postData = { id: postId, title: formData.get('title'), description: formData.get('description') };
-            fetch('api.php', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(postData) }).then(res => res.json()).then(data => {
+            fetch('api.php', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(postData) })
+            .then(res => res.json())
+            .then(data => {
                 if (data.success) { 
                     postModal.classList.remove('show'); 
                     const activeTab = document.querySelector('.main-content .tab.active')?.dataset.tab; 
                     if (activeTab) fetchPostsAndRender(activeTab); 
                     showToast(data.message); 
                 } else { 
-                    alert(data.message || 'An error occurred.'); 
+                    alert(data.message || 'An error occurred while updating.'); 
                 }
-            }).finally(() => {
+            })
+            .catch(error => {
+                console.error('Update Error:', error);
+                alert('A network error occurred during update.');
+            })
+            .finally(() => {
                 submitBtn.classList.remove('loading');
                 submitBtn.disabled = false;
             });
         } else {
-            fetch('api.php', { method: 'POST', body: formData }).then(res => res.json()).then(data => {
-                if (data.success) { 
-                    postModal.classList.remove('show'); 
-                    const activeTab = document.querySelector('.main-content .tab.active')?.dataset.tab || formData.get('postType'); 
-                    if (activeTab) setActiveTab(activeTab); 
-                    showToast(data.message); 
-                } else { 
-                    alert(data.message || 'An error occurred.'); 
+            fetch('api.php', { method: 'POST', body: formData })
+            .then(res => {
+                // --- START: THIS IS THE FIX ---
+                // This new logic gives better error messages
+                if (!res.ok) {
+                    return res.text().then(text => { throw new Error(text || `HTTP error! status: ${res.status}`) });
                 }
-            }).finally(() => {
+                const contentType = res.headers.get("content-type");
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    return res.json();
+                } else {
+                    return res.text().then(text => { throw new Error("Server did not return valid JSON. Response: " + text) });
+                }
+                // --- END: THIS IS THE FIX ---
+            })
+            .then(data => {
+                if (data.success) {
+                    postModal.classList.remove('show');
+                    const newPostType = formData.get('postType');
+                    setActiveTab(newPostType);
+                    showToast(data.message);
+                } else {
+                    alert(data.message || 'An error occurred while creating the post.');
+                }
+            })
+            .catch(error => {
+                console.error('Create Post Error:', error);
+                alert('An error occurred. Check the console (F12) for more details.');
+            })
+            .finally(() => {
                 submitBtn.classList.remove('loading');
                 submitBtn.disabled = false;
             });
@@ -260,12 +293,6 @@ const body = document.body;
 function toggleTheme() {
   body.classList.toggle('light-theme'); const isLight = body.classList.contains('light-theme');
   localStorage.setItem('unisphere_theme', isLight ? 'light' : 'dark');
-  
-  if (window.pJSDom && window.pJSDom.length > 0) {
-    window.pJSDom[0].pJS.fn.vendors.destroypJS();
-    window.pJSDom = [];
-  }
-  initParticles();
 }
 
 if (themeToggleCheckbox) themeToggleCheckbox.addEventListener('change', toggleTheme);
@@ -360,19 +387,6 @@ if (signupForm) {
   });
 }
 
-function initParticles() {
-    const particlesContainer = document.getElementById('particles-js');
-    if (!particlesContainer) return;
-    const isLight = document.body.classList.contains('light-theme');
-    const config = isLight ? 'particles-config-light.js' : 'particles-config.js';
-    const configScript = document.createElement('script');
-    configScript.src = config;
-    configScript.onload = () => {
-        document.body.removeChild(configScript);
-    };
-    document.body.appendChild(configScript);
-}
-
 function loadFooter() {
   const footerPlaceholder = document.getElementById('footer-placeholder');
   if (footerPlaceholder) {
@@ -418,7 +432,6 @@ function renderGlobalSearchResults(data) {
     modal.classList.add('show');
 }
 
-// Friends Feature
 function handleFriendsTabClick(tab) {
     if (tab === 'myFriends' || tab === 'pendingRequests') {
         const contentDiv = document.getElementById('friendsContent');
@@ -577,7 +590,6 @@ function getFriendButtonHTML(status, actionUserEmail) {
     }
 }
 
-// Messaging feature
 function handleStartChat(e) {
     const userEmail = e.currentTarget.dataset.userEmail;
     const formData = new FormData();
@@ -773,7 +785,6 @@ if (sendMessageForm) {
 document.addEventListener('DOMContentLoaded', () => {
     loadFooter();
     checkLoginStatus();
-    initParticles();
     
     const currentPage = window.location.pathname.split('/').pop();
 
@@ -813,7 +824,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    if (currentPage === 'profile.php' && typeof serverData !== 'undefined') {
+    if (currentPage.includes('profile.php') && typeof serverData !== 'undefined') {
         const avatarImg = document.getElementById('profileAvatarImg');
         const uploadBtn = document.getElementById('uploadAvatarBtn');
         const changeBtn = document.getElementById('changeAvatarBtn');
@@ -835,8 +846,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         let authUser = getAuthInfo(); 
                         authUser.avatar_path = data.filepath;
                         localStorage.setItem(AUTH_KEY, JSON.stringify(authUser));
-                        avatarImg.src = getAvatarDisplayUrl(authUser);
-                        showToast("Avatar updated!");
+                        location.reload(); 
                     } else { alert(data.message); }
                 });
             });
@@ -845,17 +855,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 let authUser = getAuthInfo(); const newSeed = Date.now().toString();
                 authUser.avatarSeed = newSeed; authUser.avatar_path = null; 
                 localStorage.setItem(AUTH_KEY, JSON.stringify(authUser));
-                avatarImg.src = generateAvatarUrl(authUser.username, newSeed);
-                const formData = new FormData(); formData.append('avatar_path', 'NULL');
-                fetch('update-profile.php', { method: 'POST', body: formData});
+                
+                const formData = new FormData(); 
+                formData.append('avatar_path', 'NULL'); 
+                fetch('update-profile.php', { method: 'POST', body: formData}).then(() => {
+                    location.reload(); 
+                });
             });
 
             editProfileBtn.addEventListener('click', () => {
                 if(!editProfileModal) return;
                 const authUser = getAuthInfo();
-                editProfileForm.querySelector('#username').value = authUser.username;
-                editProfileForm.querySelector('#email').value = authUser.email;
-                editProfileForm.querySelector('#bio').value = authUser.bio || '';
+                editProfileForm.querySelector('#username').value = user.username;
+                editProfileForm.querySelector('#email').value = user.email;
+                editProfileForm.querySelector('#bio').value = user.bio || '';
                 editProfileModal.classList.add('show');
             });
 
@@ -869,10 +882,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   fetch('update-profile.php', { method: 'POST', body: formData }).then(res => res.json()).then(data => {
                       if (data.success) {
                           localStorage.setItem(AUTH_KEY, JSON.stringify(data.user));
-                          document.getElementById('welcomeHeading').textContent = data.user.username;
-                          document.getElementById('emailSubheading').textContent = data.user.email;
-                          if(editProfileModal) editProfileModal.classList.remove('show');
-                          showToast(data.message);
+                          location.reload(); 
                       } else { alert(data.message); }
                   });
               });
@@ -891,7 +901,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // Wire up all modals
     const friendsBtn = document.getElementById('friendsBtn');
     const friendsModal = document.getElementById('friendsModal');
     if (friendsBtn && friendsModal) {
@@ -949,8 +958,6 @@ function setupPostModal(postType, isEditing) {
     const title = postModal.querySelector('h2');
     const submitBtnSpan = postModal.querySelector('button[type="submit"] span');
 
-    postForm.reset();
-    document.getElementById('postId').value = '';
     statusGroup.classList.add('hidden');
     categoryGroup.classList.add('hidden');
 
@@ -960,6 +967,8 @@ function setupPostModal(postType, isEditing) {
         title.textContent = `Edit ${postType.charAt(0).toUpperCase() + postType.slice(1)}`;
         submitBtnSpan.textContent = 'Save Changes';
     } else {
+        postForm.reset();
+        document.getElementById('postId').value = '';
         title.textContent = `Create New ${postType.charAt(0).toUpperCase() + postType.slice(1)}`;
         submitBtnSpan.textContent = 'Submit Post';
     }
@@ -970,3 +979,4 @@ function setupPostModal(postType, isEditing) {
         categoryGroup.classList.remove('hidden');
     }
 }
+
