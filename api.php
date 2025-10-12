@@ -22,6 +22,34 @@ function getUserDetails($conn, $email) {
 
 switch ($method) {
     case 'GET':
+        if (isset($_GET['recommendationsForPost'])) {
+            $postId = $_GET['recommendationsForPost'];
+
+            // Get the title of the original post
+            $stmt = $conn->prepare("SELECT title FROM posts WHERE id = ?");
+            $stmt->bind_param("s", $postId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $post = $result->fetch_assoc();
+
+            if ($post) {
+                // A simple way to get keywords: split the title into words
+                $keywords = explode(' ', $post['title']);
+                $searchQuery = implode(' ', array_slice($keywords, 0, 5)); // Use first 5 words
+
+                // Find other posts that match these keywords
+                $stmt = $conn->prepare("SELECT id, title, description, postType FROM posts WHERE MATCH(title, description) AGAINST (? IN BOOLEAN MODE) AND id != ? LIMIT 3");
+                $stmt->bind_param("ss", $searchQuery, $postId);
+                $stmt->execute();
+                $recommendations = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+                echo json_encode($recommendations);
+            } else {
+                echo json_encode([]);
+            }
+            exit;
+        }
+        
         if (isset($_GET['checkFriendshipStatus'])) {
             if (!$current_user_email) { http_response_code(401); exit; }
             $other_user_email = $_GET['checkFriendshipStatus'];

@@ -40,5 +40,5 @@ UniSphere is a full-stack application built with a focus on security, maintainab
   ### 2. Clone the Repository
   Clone this project into the `htdocs` directory of your local server.
   ```bash
-  git clone <your-repository-url> unisphere
-  cd unisphere
+  git clone <> unisphere
+  cd unisphere2

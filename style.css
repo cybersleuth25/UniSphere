@@ -50,8 +50,8 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  position: relative; /* For background elements */
-  overflow-x: hidden; /* Prevents horizontal scroll from glows */
+  position: relative;
+  overflow-x: hidden;
 }
 
 .header {
@@ -138,12 +138,11 @@ body.light-theme .header {
   border-radius: var(--card-radius);
   padding: 16px;
   border: 1px solid var(--muted-elements);
-  transition: transform 0.3s ease, box-shadow 0.3s ease, min-height 0.4s ease-in-out;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
   display: flex;
   gap: 12px;
   align-items: flex-start;
   background-color: var(--bg-light);
-  min-height: 200px;
   position: relative;
 }
 
@@ -156,7 +155,7 @@ body.light-theme .header {
 }
 
 .card-description {
-    max-height: 4.5em; /* Limits to about 3 lines */
+    max-height: 4.5em;
     overflow-y: hidden;
     transition: max-height 0.3s ease-out;
     margin: 8px 0;
@@ -164,7 +163,7 @@ body.light-theme .header {
 }
 
 .card-description.expanded {
-    max-height: 1000px; /* A large value to allow full expansion */
+    max-height: 1000px;
 }
 
 .read-more-btn {
@@ -174,7 +173,7 @@ body.light-theme .header {
     cursor: pointer;
     font-weight: 600;
     padding: 4px 0;
-    display: none; /* Hidden by default */
+    display: none;
 }
 
 
@@ -206,8 +205,6 @@ body.light-theme .card:hover {
 }
 .status-tag.lost { background-color: var(--status-lost); }
 .status-tag.found { background-color: var(--status-found); }
-.status-tag.claimed { background-color: var(--status-claimed); }
-
 
 .profile-page-body,
 .auth-page-body {
@@ -621,22 +618,6 @@ input:checked+.slider:before {
   padding-right: 50px; 
 }
 
-.meta {
-  font-size: 13px;
-  color: var(--text-muted);
-  margin-bottom: 6px;
-}
-
-.chip {
-  display: inline-block;
-  padding: 6px 8px;
-  border-radius: 999px;
-  font-size: 12px;
-  background: var(--bg);
-  color: var(--text-color);
-  margin-right: 6px;
-}
-
 .card .actions {
   margin-top: auto;
   padding-top: 8px;
@@ -658,14 +639,6 @@ body.light-theme .sidebar {
 .small {
   font-size: 13px;
   color: var(--text-muted);
-}
-
-.urgent {
-  background: var(--urgent-red);
-  color: white;
-  padding: 6px 8px;
-  border-radius: 8px;
-  font-size: 12px;
 }
 
 .modal {
@@ -710,12 +683,14 @@ body.light-theme .modal-content {
 #imagePreviewModal .modal-content {
     max-width: 90vw;
     max-height: 90vh;
-    padding: 10px;
+    padding: 0;
     background: transparent;
     border: none;
     box-shadow: none;
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
+    display: flex;
+    flex-direction: column;
 }
 
 #fullSizeImage {
@@ -734,6 +709,12 @@ body.light-theme .modal-content {
   font-weight: bold;
   color: var(--text-muted);
   cursor: pointer;
+  z-index: 101;
+}
+
+#imagePreviewModal .close-btn {
+    color: white;
+    text-shadow: 0 0 5px black;
 }
 
 .form-group {
@@ -1067,10 +1048,6 @@ body.light-theme .form-group select:focus {
     text-shadow: 0 0 5px var(--bg);
 }
 
-.auth-page-body #particles-js {
-    display: none;
-}
-
 .aurora-background {
     position: fixed;
     top: 0;
@@ -1161,9 +1138,7 @@ body.light-theme .profile-container {
 body.light-theme .hero-glow {
     opacity: 0.2;
 }
-#tag{
-  font-family: cursive;
-}
+
 .conversation-item {
     position: relative;
 }
@@ -1183,4 +1158,28 @@ body.light-theme .hero-glow {
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+#recommendations-container {
+    padding: 15px;
+    margin-top: 10px;
+    background: var(--bg-light);
+    border-radius: 0 0 var(--card-radius) var(--card-radius);
+}
+
+#recommendations-container h4 {
+    margin: 0 0 10px 0;
+    color: var(--text-color);
+}
+
+.recommendation-link {
+    display: block;
+    color: var(--text-muted);
+    text-decoration: none;
+    padding: 5px 0;
+    font-size: 14px;
+}
+
+.recommendation-link:hover {
+    color: var(--primary-color);
 }

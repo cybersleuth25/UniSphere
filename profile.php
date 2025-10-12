@@ -87,12 +87,38 @@ if (!$user) {
         <?php endif; ?>
     </div>
     
+    <?php if ($is_own_profile): ?>
+    <div id="editProfileModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2>Edit Profile</h2>
+            <form id="editProfileForm">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" value="<?php echo htmlspecialchars($user['username'] ?? ''); ?>" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($user['email'] ?? ''); ?>" required>
+                </div>
+                <div class="form-group">
+                    <label for="bio">Bio</label>
+                    <textarea id="bio" name="bio" rows="4" placeholder="Tell us a little about yourself..."><?php echo htmlspecialchars($user['bio'] ?? ''); ?></textarea>
+                </div>
+                <button type="submit" class="btn">Update Profile</button>
+            </form>
+        </div>
+    </div>
+    <?php endif; ?>
+    
+    <div id="toast"></div>
+
     <script>
         const serverData = {
             user: <?php echo json_encode($user); ?>,
             isOwnProfile: <?php echo json_encode($is_own_profile); ?>
         };
     </script>
-    <script src="js/profile.js"></script>
+    <script type="module" src="js/main.js"></script>
 </body>
 </html>

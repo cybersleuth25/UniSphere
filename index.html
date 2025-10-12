@@ -128,6 +128,12 @@
           <label for="postImage">Image (Optional)</label>
           <input type="file" id="postImage" name="image" accept="image/*">
         </div>
+        
+        <div class="form-group">
+          <label for="postFile">Attach File (e.g., PDF, ZIP)</label>
+          <input type="file" id="postFile" name="postFile">
+        </div>
+
         <button type="submit" class="btn">
             <i class="fas fa-spinner fa-spin"></i>
             <span>Submit Post</span>
@@ -186,9 +192,10 @@
   </div>
   
   <div id="imagePreviewModal" class="modal">
-      <div class="modal-content" style="max-width: 90vw; max-height: 90vh; padding: 10px;">
+      <div class="modal-content">
           <span class="close-btn">&times;</span>
-          <img src="" id="fullSizeImage" style="width: 100%; height: 100%; object-fit: contain;">
+          <img src="" id="fullSizeImage">
+          <div id="recommendations-container"></div>
       </div>
   </div>
 

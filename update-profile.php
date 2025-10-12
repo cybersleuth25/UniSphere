@@ -11,6 +11,20 @@ if (!isset($_SESSION['user_email'])) {
 }
 
 $current_email = $_SESSION['user_email'];
+
+// Handle avatar reset request
+if (isset($_POST['avatar_path_reset'])) {
+    $stmt = $conn->prepare("UPDATE users SET avatar_path = NULL WHERE email = ?");
+    $stmt->bind_param("s", $current_email);
+    if ($stmt->execute()) {
+        echo json_encode(['success' => true, 'message' => 'Avatar reset successfully.']);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Failed to reset avatar.']);
+    }
+    exit;
+}
+
+// Handle profile text updates
 $new_username = $_POST['username'] ?? '';
 $new_email = $_POST['email'] ?? '';
 $new_bio = $_POST['bio'] ?? '';
