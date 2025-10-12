@@ -190,7 +190,45 @@ function setActiveTab(tabName) {
 }
 
 function renderCategoryFilters(tabName) {
-    // ... (This function is correct and remains the same)
+    const categoryFiltersContainer = document.getElementById('categoryFilters');
+    const searchInput = document.getElementById('searchInput');
+
+    const filterConfig = {
+        resources: { key: 'category', options: ['All', 'Lecture Notes', 'Textbooks', 'Exam Papers', 'Project Code', 'Other'] },
+        lostfound: { key: 'status', options: ['All', 'Lost', 'Found'] },
+        courses: { key: 'cost_type', options: ['All', 'Free', 'Paid'] }
+    };
+
+    const currentFilter = filterConfig[tabName];
+    if (!currentFilter) {
+        categoryFiltersContainer.innerHTML = '';
+        categoryFiltersContainer.style.display = 'none';
+        return;
+    }
+
+    categoryFiltersContainer.style.display = 'flex';
+    categoryFiltersContainer.innerHTML = currentFilter.options.map(opt =>
+        `<button class="filter-btn ${opt === 'All' ? 'active' : ''}" data-filter-value="${opt}">${opt}</button>`
+    ).join('');
+
+    categoryFiltersContainer.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            categoryFiltersContainer.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+            
+            const filterValue = e.currentTarget.dataset.filterValue;
+            let filters = {};
+            if (filterValue !== 'All') {
+                filters[currentFilter.key] = filterValue;
+            }
+            const search = searchInput ? searchInput.value.trim().toLowerCase() : '';
+            if (search) {
+                filters['search'] = search;
+            }
+            
+            posts.fetchAndRenderPosts(tabName, filters);
+        });
+    });
 }
 
 async function handlePostFormSubmit(e) {
@@ -257,7 +295,14 @@ function initializeProfilePage() {
 }
 
 function loadFooter() {
-    // ... (This function is correct and remains the same)
+     const footerPlaceholder = document.getElementById('footer-placeholder');
+      if (footerPlaceholder) {
+        fetch('footer.php')
+          .then(response => response.text())
+          .then(data => {
+            footerPlaceholder.innerHTML = data;
+          });
+      }
 }
 
 document.addEventListener('DOMContentLoaded', () => {

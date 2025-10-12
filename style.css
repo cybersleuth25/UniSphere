@@ -125,7 +125,6 @@ body.light-theme .header {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
-  align-items: start;
 }
 
 @media (max-width: 900px) {
@@ -619,7 +618,6 @@ input:checked+.slider:before {
 }
 
 .card .actions {
-  margin-top: auto;
   padding-top: 8px;
   display: flex;
   gap: 8px;
@@ -1182,4 +1180,26 @@ body.light-theme .hero-glow {
 
 .recommendation-link:hover {
     color: var(--primary-color);
+}
+
+.card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+    padding-top: 12px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.card-footer .post-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.file-download-btn {
+    padding: 6px 12px;
+    font-size: 13px;
 }
