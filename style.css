@@ -125,7 +125,7 @@ body.light-theme .header {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
-  align-items: start; /* This is the key change to create the staggered layout */
+  align-items: start;
 }
 
 @media (max-width: 900px) {
@@ -155,38 +155,26 @@ body.light-theme .header {
   overflow: hidden;
 }
 
-.description-wrapper {
-  flex-grow: 1;
-  overflow: hidden;
-}
-
 .card-description {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  margin: 8px 0;
-  color: var(--text-color);
-  max-height: 4.5em; 
-  transition: max-height 0.4s ease-in-out;
+    max-height: 4.5em; /* Limits to about 3 lines */
+    overflow-y: hidden;
+    transition: max-height 0.3s ease-out;
+    margin: 8px 0;
+    color: var(--text-color);
 }
 
 .card-description.expanded {
-  -webkit-line-clamp: unset;
-  max-height: 1000px;
+    max-height: 1000px; /* A large value to allow full expansion */
 }
 
-
 .read-more-btn {
-  background: none;
-  border: none;
-  color: var(--primary-color);
-  cursor: pointer;
-  font-weight: 600;
-  padding: 4px 0;
-  text-align: left;
-  display: none;
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    cursor: pointer;
+    font-weight: 600;
+    padding: 4px 0;
+    display: none; /* Hidden by default */
 }
 
 
@@ -425,7 +413,7 @@ body.light-theme .search:focus-within {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  position: relative; /* For loading spinner */
+  position: relative;
 }
 
 .btn:hover {
@@ -688,7 +676,7 @@ body.light-theme .sidebar {
   width: 100%;
   height: 100%;
   background-color: rgba(0, 0, 0, 0.6);
-  display: flex;
+  display: none;
   justify-content: center;
   align-items: center;
   opacity: 0;
@@ -697,6 +685,7 @@ body.light-theme .sidebar {
 }
 
 .modal.show {
+  display: flex;
   opacity: 1;
   visibility: visible;
 }
@@ -717,6 +706,25 @@ body.light-theme .sidebar {
 body.light-theme .modal-content {
   background: rgba(255, 255, 255, 0.8);
 }
+
+#imagePreviewModal .modal-content {
+    max-width: 90vw;
+    max-height: 90vh;
+    padding: 10px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+}
+
+#fullSizeImage {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: var(--card-radius);
+}
+
 
 .close-btn {
   position: absolute;
@@ -1128,6 +1136,7 @@ body.light-theme .aurora-blob {
     border-radius: 24px;
     padding: 32px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    padding-top: 60px;
 }
 
 body.light-theme .login-card,
@@ -1156,7 +1165,7 @@ body.light-theme .hero-glow {
   font-family: cursive;
 }
 .conversation-item {
-    position: relative; /* Needed for positioning the unread count */
+    position: relative;
 }
 
 .unread-count {
