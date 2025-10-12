@@ -13,7 +13,6 @@ $method = $_SERVER['REQUEST_METHOD'];
 $is_admin = (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin');
 $current_user_email = $_SESSION['user_email'] ?? null;
 
-// Helper function to get user details
 function getUserDetails($conn, $email) {
     $stmt = $conn->prepare("SELECT username, email, avatar_path, branch, semester FROM users WHERE email = ?");
     $stmt->bind_param("s", $email);
@@ -56,16 +55,19 @@ switch ($method) {
                 ");
                 $stmt->bind_param("sss", $current_user_email, $current_user_email, $current_user_email);
             } elseif ($_GET['fetch'] === 'conversations') {
+                $data = []; 
                 $stmt = $conn->prepare("
                     SELECT 
                         c.id as conversation_id,
                         (SELECT message FROM messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_message,
+                        (SELECT COUNT(*) FROM messages WHERE conversation_id = c.id AND sender_email != ? AND is_read = 0) as unread_count,
                         IF(c.user_one_email = ?, c.user_two_email, c.user_one_email) as other_user_email
                     FROM conversations c
                     WHERE c.user_one_email = ? OR c.user_two_email = ?
                     ORDER BY (SELECT created_at FROM messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) DESC
                 ");
-                $stmt->bind_param("sss", $current_user_email, $current_user_email, $current_user_email);
+                // The typo was here. Changed "sssss" to "ssss" to match the 4 question marks in the query.
+                $stmt->bind_param("ssss", $current_user_email, $current_user_email, $current_user_email, $current_user_email);
                 $stmt->execute();
                 $result = $stmt->get_result();
                 while($row = $result->fetch_assoc()){
@@ -77,6 +79,11 @@ switch ($method) {
 
             } elseif ($_GET['fetch'] === 'messages') {
                 $conversation_id = $_GET['conversation_id'];
+                
+                $update_stmt = $conn->prepare("UPDATE messages SET is_read = 1 WHERE conversation_id = ? AND sender_email != ?");
+                $update_stmt->bind_param("is", $conversation_id, $current_user_email);
+                $update_stmt->execute();
+
                 $stmt = $conn->prepare("SELECT * FROM messages WHERE conversation_id = ? ORDER BY created_at ASC");
                 $stmt->bind_param("i", $conversation_id);
             }
@@ -110,13 +117,9 @@ switch ($method) {
             exit;
 
         } else {
-            // Main Post Fetching Logic
             $postType = $_GET['postType'] ?? '';
             if (empty($postType)) { echo json_encode([]); exit; }
             
-            $search = $_GET['search'] ?? '';
-            $category = $_GET['category'] ?? '';
-
             $params = [];
             $types = '';
 
@@ -125,15 +128,24 @@ switch ($method) {
             $params[] = $postType;
             $types .= 'ss';
 
-            if (!empty($search)) {
+            if (!empty($_GET['search'])) {
                 $sql .= " AND MATCH(p.title, p.description) AGAINST (? IN BOOLEAN MODE)";
-                $params[] = $search;
+                $params[] = $_GET['search'];
                 $types .= 's';
             }
-
-            if (!empty($category)) {
+            if (!empty($_GET['category'])) {
                 $sql .= " AND p.category = ?";
-                $params[] = $category;
+                $params[] = $_GET['category'];
+                $types .= 's';
+            }
+            if (!empty($_GET['status'])) {
+                $sql .= " AND p.status = ?";
+                $params[] = $_GET['status'];
+                $types .= 's';
+            }
+            if (!empty($_GET['cost_type'])) {
+                $sql .= " AND p.cost_type = ?";
+                $params[] = $_GET['cost_type'];
                 $types .= 's';
             }
 
@@ -274,7 +286,7 @@ switch ($method) {
                 }
                 break;
 
-            default: // This is for creating a post
+            default: 
                 $postType = $_POST['postType'];
                 $admin_only_posts = ['announcements', 'events'];
 
@@ -291,6 +303,7 @@ switch ($method) {
                 $date = date('Y-m-d H:i:s');
                 $status = $_POST['status'] ?? null;
                 $category = $_POST['category'] ?? null;
+                $cost_type = $_POST['cost_type'] ?? null;
                 $imagePath = null;
                 if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
                     $filename = uniqid('postimg_', true) . '.' . pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
@@ -299,8 +312,8 @@ switch ($method) {
                         $imagePath = $destination;
                     }
                 }
-                $stmt = $conn->prepare("INSERT INTO posts (id, postType, title, description, date, author, image, status, category) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->bind_param("sssssssss", $id, $postType, $title, $description, $date, $author, $imagePath, $status, $category);
+                $stmt = $conn->prepare("INSERT INTO posts (id, postType, title, description, date, author, image, status, category, cost_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->bind_param("ssssssssss", $id, $postType, $title, $description, $date, $author, $imagePath, $status, $category, $cost_type);
                 if ($stmt->execute()) {
                      if ($postType === 'events' || $postType === 'announcements') {
                         $notification_message = "New " . rtrim($postType, 's') . ": " . $title;

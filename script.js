@@ -45,8 +45,9 @@ function setActiveTab(tabName) {
   const placeholderText = `Search in ${tabName}... (Press Enter for Global Search)`;
   if (searchInput) searchInput.placeholder = placeholderText;
 
-  if (tabName === 'resources') {
-      renderCategoryFilters();
+  const filterableTabs = ['resources', 'lostfound', 'courses'];
+  if (filterableTabs.includes(tabName)) {
+      renderFilters(tabName);
       categoryFiltersContainer.style.display = 'flex';
   } else {
       categoryFiltersContainer.style.display = 'none';
@@ -55,33 +56,55 @@ function setActiveTab(tabName) {
   fetchPostsAndRender(tabName);
 }
 
-function renderCategoryFilters() {
-    const categories = ['All', 'Lecture Notes', 'Textbooks', 'Exam Papers', 'Project Code', 'Other'];
-    categoryFiltersContainer.innerHTML = categories.map(cat => 
-        `<button class="filter-btn ${cat === 'All' ? 'active' : ''}" data-category="${cat}">${cat}</button>`
+function renderFilters(tabName) {
+    const filterConfig = {
+        resources: { key: 'category', options: ['All', 'Lecture Notes', 'Textbooks', 'Exam Papers', 'Project Code', 'Other'] },
+        lostfound: { key: 'status', options: ['All', 'Lost', 'Found'] },
+        courses: { key: 'cost_type', options: ['All', 'Free', 'Paid'] }
+    };
+
+    const currentFilter = filterConfig[tabName];
+    if (!currentFilter) {
+        categoryFiltersContainer.innerHTML = '';
+        return;
+    }
+
+    categoryFiltersContainer.innerHTML = currentFilter.options.map(opt =>
+        `<button class="filter-btn ${opt === 'All' ? 'active' : ''}" data-filter-value="${opt}">${opt}</button>`
     ).join('');
 
     categoryFiltersContainer.querySelectorAll('.filter-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             categoryFiltersContainer.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
             e.currentTarget.classList.add('active');
-            const category = e.currentTarget.dataset.category;
-            fetchPostsAndRender('resources', category === 'All' ? '' : category);
+            
+            const filterValue = e.currentTarget.dataset.filterValue;
+            let filters = {};
+            if (filterValue !== 'All') {
+                const search = searchInput ? searchInput.value.trim().toLowerCase() : '';
+                if(search) filters['search'] = search;
+                filters[currentFilter.key] = filterValue;
+            }
+            fetchPostsAndRender(tabName, filters);
         });
     });
 }
 
-function fetchPostsAndRender(tab, category = '') {
+
+function fetchPostsAndRender(tab, filters = {}) {
   if (!contentArea) return;
   let skeletonHTML = '';
   for (let i = 0; i < 4; i++) {
       skeletonHTML += `<div class="skeleton-card"><div class="skeleton-thumb"></div><div style="flex:1;"><div class="skeleton-text"></div><div class="skeleton-text short"></div></div></div>`;
   }
   contentArea.innerHTML = `<div class="cards">${skeletonHTML}</div>`;
-  const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+  
   let url = `api.php?postType=${tab}`;
-  if (query) url += `&search=${encodeURIComponent(query)}`;
-  if (category) url += `&category=${encodeURIComponent(category)}`;
+  for (const key in filters) {
+      if (filters[key]) {
+          url += `&${key}=${encodeURIComponent(filters[key])}`;
+      }
+  }
 
   setTimeout(() => {
     fetch(url)
@@ -97,7 +120,12 @@ function fetchPostsAndRender(tab, category = '') {
             const showEditDelete = isAdmin || isAuthor;
             const imageHtml = x.image ? `<div class="thumb image" style="background-image: url('${x.image}')"></div>` : `<div class="thumb">${x.postType.slice(0, 3).toUpperCase()}</div>`;
             
-            const statusTag = (x.postType === 'lostfound' && x.status) ? `<div class="status-tag ${x.status.toLowerCase()}">${x.status}</div>` : '';
+            let statusTag = '';
+            if (x.postType === 'lostfound' && x.status) {
+                statusTag = `<div class="status-tag ${x.status.toLowerCase()}">${x.status}</div>`;
+            } else if (x.postType === 'courses' && x.cost_type) {
+                statusTag = `<div class="status-tag" style="background-color: var(--accent-color);">${x.cost_type}</div>`;
+            }
             
             const unsafeHtml = x.description ? marked.parse(x.description) : '';
             const descriptionHtml = DOMPurify.sanitize(unsafeHtml);
@@ -185,6 +213,9 @@ function handleEditClick(e) {
     if (document.getElementById('postCategory') && postData.category) {
         document.getElementById('postCategory').value = postData.category;
     }
+     if (document.getElementById('postCostType') && postData.cost_type) {
+        document.getElementById('postCostType').value = postData.cost_type;
+    }
     
     if(postModal) postModal.classList.add('show');
 }
@@ -243,8 +274,6 @@ if (postModal) {
         } else {
             fetch('api.php', { method: 'POST', body: formData })
             .then(res => {
-                // --- START: THIS IS THE FIX ---
-                // This new logic gives better error messages
                 if (!res.ok) {
                     return res.text().then(text => { throw new Error(text || `HTTP error! status: ${res.status}`) });
                 }
@@ -254,7 +283,6 @@ if (postModal) {
                 } else {
                     return res.text().then(text => { throw new Error("Server did not return valid JSON. Response: " + text) });
                 }
-                // --- END: THIS IS THE FIX ---
             })
             .then(data => {
                 if (data.success) {
@@ -631,6 +659,10 @@ function fetchConversations(andSelectId = null) {
                  const convoItem = document.querySelector(`.conversation-item[data-conversation-id='${andSelectId}']`);
                  if(convoItem) convoItem.click();
             }
+        })
+        .catch(error => {
+            console.error('Failed to load conversations:', error);
+            container.innerHTML = '<p style="padding: 16px; text-align: center; color: var(--urgent-red);">Could not load conversations.</p>';
         });
 }
 
@@ -646,7 +678,8 @@ function renderConversations(conversations, isNewConversationUI = false) {
         backBtn.style.display = 'inline-flex';
         newBtn.style.display = 'none';
 
-        container.innerHTML = '';
+        container.innerHTML = '<p style="padding: 16px; text-align: center;">Loading...</p>';
+
         fetch('api.php?fetch=friends')
             .then(res => res.json())
             .then(friends => {
@@ -665,6 +698,10 @@ function renderConversations(conversations, isNewConversationUI = false) {
                         item.addEventListener('click', (e) => handleStartChat(e));
                     });
                 }
+            })
+            .catch(error => {
+                console.error('Failed to load friends list:', error);
+                container.innerHTML = '<p style="padding: 16px; text-align: center; color: var(--urgent-red);">Could not load friends.</p>';
             });
     } else {
         header.textContent = 'Conversations';
@@ -681,6 +718,7 @@ function renderConversations(conversations, isNewConversationUI = false) {
                     <p class="username">${convo.other_user.username}</p>
                     <p class="last-message">${convo.last_message ? convo.last_message.substring(0, 25) + (convo.last_message.length > 25 ? '...' : '') : 'No messages yet'}</p>
                 </div>
+                ${convo.unread_count > 0 ? `<div class="unread-count">${convo.unread_count}</div>` : ''}
             </div>
         `).join('');
 
@@ -722,7 +760,12 @@ function fetchMessages(conversationId, isUpdate = false) {
     
     fetch(`api.php?fetch=messages&conversation_id=${conversationId}`)
         .then(res => res.json())
-        .then(messages => renderMessages(messages, isUpdate))
+        .then(messages => {
+            renderMessages(messages, isUpdate);
+            if (!isUpdate) {
+                fetchConversations(); 
+            }
+        })
         .catch(console.error);
 }
 
@@ -795,8 +838,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const debouncedSearch = debounce(() => {
                 const activeTab = document.querySelector('.main-content .tab.active')?.dataset.tab;
                 if (activeTab) {
-                    const activeCategory = categoryFiltersContainer.querySelector('.filter-btn.active')?.dataset.category || 'All';
-                    fetchPostsAndRender(activeTab, activeCategory === 'All' ? '' : activeCategory);
+                    const activeFilterBtn = categoryFiltersContainer.querySelector('.filter-btn.active');
+                    const filterValue = activeFilterBtn ? activeFilterBtn.dataset.filterValue : 'All';
+                    
+                    const filterConfig = {
+                        resources: 'category',
+                        lostfound: 'status',
+                        courses: 'cost_type'
+                    };
+                    const filterKey = filterConfig[activeTab];
+
+                    let filters = { search: searchInput.value.trim() };
+                    if (filterKey && filterValue !== 'All') {
+                        filters[filterKey] = filterValue;
+                    }
+                    
+                    fetchPostsAndRender(activeTab, filters);
                 }
             }, 500);
             
@@ -955,11 +1012,13 @@ function setupPostModal(postType, isEditing) {
     const postForm = document.getElementById('postForm');
     const statusGroup = document.getElementById('lostFoundStatusGroup');
     const categoryGroup = document.getElementById('resourceCategoryGroup');
+    const courseGroup = document.getElementById('courseCostGroup');
     const title = postModal.querySelector('h2');
     const submitBtnSpan = postModal.querySelector('button[type="submit"] span');
 
     statusGroup.classList.add('hidden');
     categoryGroup.classList.add('hidden');
+    courseGroup.classList.add('hidden');
 
     document.getElementById('postType').value = postType;
 
@@ -977,6 +1036,76 @@ function setupPostModal(postType, isEditing) {
         statusGroup.classList.remove('hidden');
     } else if (postType === 'resources') {
         categoryGroup.classList.remove('hidden');
+    } else if (postType === 'courses') {
+        courseGroup.classList.remove('hidden');
     }
 }
 
+
+const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+if (forgotPasswordForm) {
+  forgotPasswordForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const formData = new FormData(forgotPasswordForm);
+    const email = formData.get('email');
+    fetch('forgot-password.php', { method: 'POST', body: formData })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert(data.message);
+          window.location.href = `verify-otp.html?email=${encodeURIComponent(email)}`;
+        } else {
+          alert(data.message);
+        }
+      });
+  });
+}
+
+const verifyOtpForm = document.getElementById('verifyOtpForm');
+if (verifyOtpForm) {
+  const urlParams = new URLSearchParams(window.location.search);
+  const email = urlParams.get('email');
+  if (email) {
+    document.getElementById('email').value = email;
+  }
+
+  verifyOtpForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const formData = new FormData(verifyOtpForm);
+    fetch('verify-otp.php', { method: 'POST', body: formData })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert(data.message);
+          window.location.href = 'reset-password.html';
+        } else {
+          alert(data.message);
+        }
+      });
+  });
+}
+
+const resetPasswordForm = document.getElementById('resetPasswordForm');
+if (resetPasswordForm) {
+  resetPasswordForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    if (newPassword !== confirmPassword) {
+      alert("Passwords do not match.");
+      return;
+    }
+
+    const formData = new FormData(resetPasswordForm);
+    fetch('reset-password.php', { method: 'POST', body: formData })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert(data.message);
+          window.location.href = 'login.html';
+        } else {
+          alert(data.message);
+        }
+      });
+  });
+}

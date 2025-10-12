@@ -5,44 +5,25 @@ include 'connect.php';
 header('Content-Type: application/json');
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $token = $_POST['token'] ?? '';
-    $new_password = $_POST['newPassword'];
-
-    if (empty($token) || empty($new_password)) {
-        http_response_code(400);
-        echo json_encode(["success" => false, "message" => "Token and password are required."]);
+    if (!isset($_SESSION['otp_verified_email'])) {
+        http_response_code(401);
+        echo json_encode(["success" => false, "message" => "Please verify OTP first."]);
         exit;
     }
 
-    $token_hash = hash('sha256', $token);
+    $email = $_SESSION['otp_verified_email'];
+    $new_password = $_POST['newPassword'];
 
-    $stmt = $conn->prepare("SELECT email, reset_token_expiry FROM users WHERE reset_token = ?");
-    $stmt->bind_param("s", $token_hash);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    if ($result->num_rows > 0) {
-        $user = $result->fetch_assoc();
-        
-        if (strtotime($user['reset_token_expiry']) <= time()) {
-            http_response_code(400);
-            echo json_encode(["success" => false, "message" => "Reset link has expired."]);
-            exit;
-        }
+    $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
+    $update = $conn->prepare("UPDATE users SET password = ?, otp = NULL, otp_expiry = NULL WHERE email = ?");
+    $update->bind_param("ss", $hashed_password, $email);
 
-        $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
-        $update = $conn->prepare("UPDATE users SET password = ?, reset_token = NULL, reset_token_expiry = NULL WHERE email = ?");
-        $update->bind_param("ss", $hashed_password, $user['email']);
-
-        if ($update->execute()) {
-            echo json_encode(["success" => true, "message" => "Password has been reset successfully."]);
-        } else {
-            http_response_code(500);
-            echo json_encode(["success" => false, "message" => "Error resetting password."]);
-        }
+    if ($update->execute()) {
+        unset($_SESSION['otp_verified_email']); // Clear the session variable
+        echo json_encode(["success" => true, "message" => "Password has been reset successfully."]);
     } else {
-        http_response_code(400);
-        echo json_encode(["success" => false, "message" => "Invalid reset link."]);
+        http_response_code(500);
+        echo json_encode(["success" => false, "message" => "Error resetting password."]);
     }
 
 } else {

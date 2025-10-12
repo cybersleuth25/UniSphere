@@ -80,7 +80,6 @@ body.light-theme .header {
   width: 48px;
   height: 48px;
   border-radius: 10px;
-  /* background: linear-gradient(135deg, var(--primary-color), var(--accent-color)); */
 }
 
 .title h1 {
@@ -126,6 +125,7 @@ body.light-theme .header {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
+  align-items: start; /* This is the key change to create the staggered layout */
 }
 
 @media (max-width: 900px) {
@@ -138,13 +138,13 @@ body.light-theme .header {
   border-radius: var(--card-radius);
   padding: 16px;
   border: 1px solid var(--muted-elements);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, min-height 0.4s ease-in-out;
   display: flex;
   gap: 12px;
   align-items: flex-start;
   background-color: var(--bg-light);
-  height: 200px;
-  position: relative; /* For status tag positioning */
+  min-height: 200px;
+  position: relative;
 }
 
 .card-content {
@@ -168,14 +168,15 @@ body.light-theme .header {
   -webkit-line-clamp: 3;
   margin: 8px 0;
   color: var(--text-color);
-  max-height: 4.5em; /* approx 3 lines */
+  max-height: 4.5em; 
   transition: max-height 0.4s ease-in-out;
 }
 
 .card-description.expanded {
   -webkit-line-clamp: unset;
-  max-height: 1000px; /* Large value to allow full expansion */
+  max-height: 1000px;
 }
+
 
 .read-more-btn {
   background: none;
@@ -202,7 +203,6 @@ body.light-theme .card:hover {
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
-/* Status Tag Styles */
 .status-tag {
     position: absolute;
     top: 12px;
@@ -448,7 +448,6 @@ body.light-theme .btn:hover {
   background: var(--muted-elements);
 }
 
-/* Button Loading State */
 .btn.loading > span {
     visibility: hidden;
 }
@@ -580,7 +579,6 @@ input:checked+.slider:before {
   color: white;
 }
 
-/* Category Filter Styles */
 .category-filters {
     display: flex;
     gap: 10px;
@@ -632,7 +630,7 @@ input:checked+.slider:before {
   margin: 0 0 6px 0;
   font-size: 15px;
   color: var(--text-color);
-  padding-right: 50px; /* Space for status tag */
+  padding-right: 50px; 
 }
 
 .meta {
@@ -1061,10 +1059,6 @@ body.light-theme .form-group select:focus {
     text-shadow: 0 0 5px var(--bg);
 }
 
-/* =================================== */
-/* Floating Aurora Background          */
-/* =================================== */
-
 .auth-page-body #particles-js {
     display: none;
 }
@@ -1141,10 +1135,6 @@ body.light-theme .profile-container {
     background: rgba(255, 255, 255, 0.6);
 }
 
-/* =================================== */
-/* Main Page Hero Glow                 */
-/* =================================== */
-
 .hero-glow {
     position: absolute;
     top: 0;
@@ -1155,7 +1145,7 @@ body.light-theme .profile-container {
     background: radial-gradient(circle, var(--accent-color) 0%, transparent 70%);
     opacity: 0.15;
     filter: blur(100px);
-    z-index: 0; /* Changed to 0 so it's behind header */
+    z-index: 0;
     pointer-events: none;
 }
 
@@ -1164,4 +1154,24 @@ body.light-theme .hero-glow {
 }
 #tag{
   font-family: cursive;
+}
+.conversation-item {
+    position: relative; /* Needed for positioning the unread count */
+}
+
+.unread-count {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: var(--primary-color);
+    color: white;
+    font-size: 11px;
+    font-weight: bold;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }

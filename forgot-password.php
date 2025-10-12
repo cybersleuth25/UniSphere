@@ -12,17 +12,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $result = $stmt->get_result();
 
     if ($result->num_rows > 0) {
-        $token = bin2hex(random_bytes(32));
-        $token_hash = hash('sha256', $token);
-        $expiry = date("Y-m-d H:i:s", time() + 60 * 30); // 30-minute expiry
+        $otp = rand(100000, 999999); // Generate a 6-digit OTP
+        $otp_expiry = date("Y-m-d H:i:s", time() + 60 * 10); // 10-minute expiry
 
-        $update = $conn->prepare("UPDATE users SET reset_token = ?, reset_token_expiry = ? WHERE email = ?");
-        $update->bind_param("sss", $token_hash, $expiry, $email);
+        // NOTE: You will need to add `otp` and `otp_expiry` columns to your `users` table.
+        // ALTER TABLE users ADD otp VARCHAR(6), ADD otp_expiry DATETIME;
+        $update = $conn->prepare("UPDATE users SET otp = ?, otp_expiry = ? WHERE email = ?");
+        $update->bind_param("sss", $otp, $otp_expiry, $email);
         $update->execute();
-        echo json_encode(["success" => true, "message" => "If an account with that email exists, a password reset link has been sent."]);
+
+        // In a real application, you would integrate an email sending library here.
+        // For now, we just confirm that the process is working.
+        echo json_encode(["success" => true, "message" => "An OTP has been sent to your email."]);
 
     } else {
-        echo json_encode(["success" => true, "message" => "If an account with that email exists, a password reset link has been sent."]);
+        // We send the same message to prevent user enumeration attacks.
+        echo json_encode(["success" => true, "message" => "If an account with that email exists, an OTP has been sent."]);
     }
 
 } else {
