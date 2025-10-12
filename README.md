@@ -2,7 +2,7 @@
 
 **UniSphere is a modern, feature-rich web application designed to connect students and faculty, making university life more organized, engaging, and collaborative.**
 
-![UniSphere Homepage](Screenshot%202025-10-12%20093127.png)
+![UniSphere Homepage](Homepage.png)
 
 ## ✨ Core Features
 
@@ -40,5 +40,5 @@ UniSphere is a full-stack application built with a focus on security, maintainab
   ### 2. Clone the Repository
   Clone this project into the `htdocs` directory of your local server.
   ```bash
-  git clone <> unisphere
+  git clone <https://github.com/cybersleuth25/UniSphere.git> unisphere
   cd unisphere2
