@@ -47,12 +47,16 @@ function createPostCardHTML(post) {
         : `<div class="thumb">${post.postType.slice(0, 3).toUpperCase()}</div>`;
     
     const fileDownloadLink = post.file_path
-        ? `<div class="file-download-link" style="margin-top: 10px;">
-             <a href="${post.file_path}" target="_blank" download class="btn secondary">
-               <i class="fas fa-download"></i> Download File
-             </a>
-           </div>`
+        ? `<a href="${post.file_path}" target="_blank" download class="btn secondary file-download-btn">
+               <i class="fas fa-download"></i> Download
+           </a>`
         : '';
+
+    const editDeleteButtons = showEditDelete ? `
+        <div class="actions">
+            <button class="btn secondary edit-btn">Edit</button>
+            <button class="btn secondary delete-btn">Delete</button>
+        </div>` : '';
 
     return `
         <article class="card ${post.postType}" data-post-id="${post.id}" data-post-raw='${JSON.stringify(post)}'>
@@ -62,20 +66,20 @@ function createPostCardHTML(post) {
                 <h3>${post.title}</h3>
                 <div class="card-description">${descriptionHtml}</div>
                 <button class="read-more-btn">Read More</button>
-                ${fileDownloadLink}
-                <div class="post-meta">
-                    <button class="like-btn ${post.liked_by_user ? 'liked' : ''}" data-post-id="${post.id}">
-                        <i class="fas fa-thumbs-up"></i> <span class="like-count">${post.likes || 0}</span>
-                    </button>
+
+                <div class="card-footer">
+                    <div class="post-meta">
+                        <button class="like-btn ${post.liked_by_user ? 'liked' : ''}" data-post-id="${post.id}">
+                            <i class="fas fa-thumbs-up"></i> <span class="like-count">${post.likes || 0}</span>
+                        </button>
+                        ${fileDownloadLink}
+                    </div>
+                    ${editDeleteButtons}
                 </div>
-                ${showEditDelete ? `
-                    <div class="actions">
-                        <button class="btn secondary edit-btn">Edit</button>
-                        <button class="btn secondary delete-btn">Delete</button>
-                    </div>` : ''}
             </div>
         </article>`;
 }
+
 
 function addPostEventListeners() {
     document.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', handleEditClick));

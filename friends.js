@@ -112,7 +112,7 @@ async function renderUserSearchResults(users) {
 function createUserCardHTML(user, type, statusData = {}) {
     return `
         <div class="user-card" data-user-email="${user.email}">
-            <img src="${user.avatar_path || `https://api.dicebear.com/7.x/bottts-neutral/svg?seed=${user.username}`}" alt="${user.username}">
+            <img src="${ui.getAvatarDisplayUrl(user)}" alt="${user.username}">
             <div class="user-card-info">
                 <h4><a href="profile.php?username=${user.username}">${user.username}</a></h4>
                 <p>${user.branch || ''} - Sem ${user.semester || ''}</p>

@@ -23,13 +23,6 @@ function getAuthInfo() {
     }
 }
 
-function getAvatarDisplayUrl(user) {
-    if (user.avatar_path) return `${user.avatar_path}?t=${new Date().getTime()}`;
-    const localUser = getAuthInfo();
-    const seedValue = user.avatarSeed || localUser.avatarSeed || user.username;
-    return `https://api.dicebear.com/8.x/thumbs/svg?seed=${encodeURIComponent(seedValue)}`;
-}
-
 function updateSidebarForRole(role) {
     const sidebarBtns = document.querySelectorAll('.sidebar .quick-action-btn');
     sidebarBtns.forEach(btn => {
@@ -57,7 +50,7 @@ function checkLoginStatus() {
     const welcomeMessage = document.getElementById('welcomeMessage');
     if (authButtonsContainer) {
         if (currentUser.username) {
-            const avatarUrl = getAvatarDisplayUrl(currentUser);
+            const avatarUrl = ui.getAvatarDisplayUrl(currentUser);
             authButtonsContainer.innerHTML = `<button id="profileBtn" class="profile-btn-icon" title="Profile"><img src="${avatarUrl}" alt="Profile"></button>`;
             document.getElementById('profileBtn').addEventListener('click', () => window.location.href = 'profile.php');
             if (welcomeMessage) welcomeMessage.textContent = `Hello, ${currentUser.username}!`;
@@ -154,7 +147,7 @@ function renderGlobalSearchResults(data) {
     if (data.users.length > 0) {
         resultsHTML += '<h3>Users</h3>';
         data.users.forEach(user => {
-            const avatarUrl = getAvatarDisplayUrl(user);
+            const avatarUrl = ui.getAvatarDisplayUrl(user);
             resultsHTML += `
             <a href="profile.php?username=${user.username}" style="text-decoration: none; color: inherit;">
                 <article class="user-card"><img src="${avatarUrl}" alt="${user.username}"><div class="user-card-info"><h4>${user.username}</h4><p>${user.bio || 'No bio.'}</p></div></article>
@@ -262,11 +255,49 @@ async function handlePostFormSubmit(e) {
 function initializeProfilePage() {
     if (typeof serverData === 'undefined') return;
     const avatarImg = document.getElementById('profileAvatarImg');
-    avatarImg.src = getAvatarDisplayUrl(serverData.user);
+    avatarImg.src = ui.getAvatarDisplayUrl(serverData.user);
+
     if (serverData.isOwnProfile) {
         const fileInput = document.getElementById('avatarUploadInput');
         document.getElementById('uploadAvatarBtn').addEventListener('click', () => fileInput.click());
-        // ... (avatar upload logic remains the same)
+
+        fileInput.addEventListener('change', async () => {
+            const file = fileInput.files[0];
+            if (!file) return;
+            const formData = new FormData();
+            formData.append('avatar', file);
+
+            try {
+                const response = await fetch('upload-avatar.php', { method: 'POST', body: formData });
+                const data = await response.json();
+                if (data.success) {
+                    let authUser = getAuthInfo();
+                    authUser.avatar_path = data.filepath;
+                    localStorage.setItem(AUTH_KEY, JSON.stringify(authUser));
+                    location.reload();
+                } else {
+                    alert(data.message);
+                }
+            } catch (error) {
+                alert('Upload failed.');
+            }
+        });
+
+        const changeAvatarBtn = document.getElementById('changeAvatarBtn');
+        if (changeAvatarBtn) {
+            changeAvatarBtn.addEventListener('click', () => {
+                let authUser = getAuthInfo();
+                const newSeed = Date.now().toString();
+                authUser.avatarSeed = newSeed;
+                authUser.avatar_path = null;
+                localStorage.setItem(AUTH_KEY, JSON.stringify(authUser));
+
+                const formData = new FormData();
+                formData.append('avatar_path_reset', 'true');
+                fetch('update-profile.php', { method: 'POST', body: formData })
+                    .then(() => location.reload());
+            });
+        }
 
         const editProfileBtn = document.getElementById('editProfileBtn');
         const editProfileModal = document.getElementById('editProfileModal');
@@ -291,6 +322,54 @@ function initializeProfilePage() {
                 } catch (error) { alert('An error occurred.'); }
             });
         }
+    } else {
+        const friendButtonContainer = document.querySelector('.friend-button-container');
+        if (friendButtonContainer) {
+            api.getFriendshipStatus(serverData.user.email).then(statusData => {
+                friendButtonContainer.innerHTML = getFriendButtonHTML(statusData.status, statusData.action_user_email);
+                friendButtonContainer.querySelectorAll('.friend-action-btn').forEach(btn => btn.addEventListener('click', handleFriendAction));
+                friendButtonContainer.querySelectorAll('.start-chat-btn').forEach(btn => btn.addEventListener('click', (e) => {
+                    const userEmail = e.currentTarget.dataset.userEmail;
+                    chat.openChatWithUser(userEmail);
+                }));
+            });
+        }
+    }
+}
+
+function getFriendButtonHTML(status, actionUserEmail) {
+    const currentUserEmail = getAuthInfo().email;
+    switch(status) {
+        case 'pending':
+            if (actionUserEmail === currentUserEmail) {
+                return '<button class="btn secondary friend-action-btn" data-action="cancel">Cancel Request</button>';
+            } else {
+                return `<button class="btn friend-action-btn" data-action="accept">Accept</button>
+                        <button class="btn secondary friend-action-btn" data-action="decline">Decline</button>`;
+            }
+        case 'accepted':
+            return `<button class="btn start-chat-btn" data-user-email="${serverData.user.email}">Message</button>
+                    <button class="btn secondary friend-action-btn" data-action="remove">Remove</button>`;
+        case 'not_friends':
+        default:
+            return '<button class="btn friend-action-btn" data-action="add">Add Friend</button>';
+    }
+}
+
+async function handleFriendAction(e) {
+    const btn = e.currentTarget;
+    const action = btn.dataset.action;
+    const userEmail = serverData.user.email;
+
+    btn.textContent = '...';
+    btn.disabled = true;
+
+    try {
+        await api.performFriendAction(action, userEmail);
+        location.reload();
+    } catch (error) {
+        ui.showToast('Action failed. Please try again.', 'error');
+        btn.disabled = false;
     }
 }
 

@@ -53,3 +53,9 @@ export function setupAndShowPostModal(postType, postData = null) {
 
     DOMElements.postModal.classList.add('show');
 }
+
+export function getAvatarDisplayUrl(user) {
+    if (user.avatar_path) return `${user.avatar_path}?t=${new Date().getTime()}`;
+    const seedValue = user.avatarSeed || user.username;
+    return `https://api.dicebear.com/8.x/thumbs/svg?seed=${encodeURIComponent(seedValue)}`;
+}
