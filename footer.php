@@ -1,7 +1,6 @@
 <footer class="footer-section">
     <div class="footer-content">
         <div class="footer-column social-links-column">
-            <h3>Facebook <i class="fa-solid fa-arrow-right"></i></h3>
             <h3>Youtube <i class="fa-solid fa-arrow-right"></i></h3>
             <h3>Twitter <i class="fa-solid fa-arrow-right"></i></h3>
             <h3>Instagram <i class="fa-solid fa-arrow-right"></i></h3>

@@ -216,6 +216,12 @@ body.light-theme .card:hover {
   overflow: hidden;
 }
 
+/* FIX: Ensure light theme background applies to profile page */
+body.light-theme.profile-page-body,
+body.light-theme.auth-page-body {
+    background: var(--bg);
+}
+
 .profile-container,
 .login-container {
   position: relative;

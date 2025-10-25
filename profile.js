@@ -1,5 +1,3 @@
-// js/profile.js
-
 const AUTH_KEY = 'unisphere_auth';
 
 function getAuthInfo() {
@@ -54,18 +52,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('Upload failed.');
             }
         });
-
-        // This adds the functionality to the "change avatar" button
         const changeAvatarBtn = document.getElementById('changeAvatarBtn');
         if (changeAvatarBtn) {
             changeAvatarBtn.addEventListener('click', () => {
                 let authUser = getAuthInfo();
                 const newSeed = Date.now().toString();
                 authUser.avatarSeed = newSeed;
-                authUser.avatar_path = null; // Remove custom avatar path
+                authUser.avatar_path = null;
                 localStorage.setItem(AUTH_KEY, JSON.stringify(authUser));
 
-                // Tell the server to remove the avatar path
                 const formData = new FormData();
                 formData.append('avatar_path_reset', 'true'); // Send a flag to reset
                 fetch('update-profile.php', { method: 'POST', body: formData })
