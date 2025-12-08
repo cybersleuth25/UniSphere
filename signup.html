@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>UniSphere Sign Up</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="auth-page-body">
+
+  <div class="aurora-background">
+    <div class="aurora-blob"></div>
+    <div class="aurora-blob"></div>
+    <div class="aurora-blob"></div>
+  </div>
+  <div class="login-container">
+    <div class="login-card">
+      <h1>Sign Up</h1>
+      <form id="signupForm">
+        <div class="form-group">
+          <label for="newUsername">Username</label>
+          <input type="text" id="newUsername" name="newUsername" required>
+        </div>
+        <div class="form-group">
+          <label for="newEmail">Email</label>
+          <input type="email" id="newEmail" name="newEmail" required>
+        </div>
+        <div class="form-group">
+          <label for="branch">Branch</label>
+          <select id="branch" name="branch" required>
+            <option value="">Select your branch</option>
+            <option value="Computer Science">Computer Science</option>
+            <option value="Information Science">Information Science</option>
+            <option value="AI/ML">Artificial Intelligence & Machine Learning</option>
+            <option value="Data Science">Data Science</option>
+            <option value="Electronics & Communication">Electronics & Communication</option>
+            <option value="Mechanical Engineering">Mechanical Engineering</option>
+            <option value="Civil Engineering">Civil Engineering</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="semester">Semester</label>
+          <input type="number" id="semester" name="semester" min="1" max="8" required>
+        </div>
+        <div class="form-group">
+          <label for="newPassword">Password</label>
+          <input type="password" id="newPassword" name="newPassword" required>
+        </div>
+        <button type="submit" class="btn">Sign Up</button>
+      </form>
+      <p class="small-text" style="margin-top: 16px;">Already have an account? <a href="login.html">Login</a></p>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+  <script type="module" src="js/main.js"></script>
+</body>
+
+</html>

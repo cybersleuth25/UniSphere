@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Verify OTP</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="auth-page-body">
+  <div class="login-container">
+    <div class="login-card">
+      <h1>Verify OTP</h1>
+      <p class="small-text" style="color: var(--text-muted); margin-bottom: 20px;">An OTP has been sent to your email. Please enter it below.</p>
+      <form id="verifyOtpForm">
+        <input type="hidden" id="email" name="email">
+        <div class="form-group">
+          <label for="otp">OTP</label>
+          <input type="text" id="otp" name="otp" required>
+        </div>
+        <button type="submit" class="btn">Verify OTP</button>
+      </form>
+      <p class="small-text"><a href="login.html">Back to Login</a></p>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

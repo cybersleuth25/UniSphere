@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>UniSphere</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@600&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+
+  <div class="hero-glow"></div>
+  <header class="header">
+    <div class="brand">
+      <div><img src="Logo.jpg" alt="UniSphere Logo" class="logo"></div>
+      <div class="title">
+        <h1>UniSphere</h1>
+        <p id="tag">Stay Updated. Stay Connected.</p>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="search" title="Press Enter for global search">
+        <i class="fas fa-search"></i>
+        <input id="searchInput" placeholder="Search..." />
+      </div>
+      <div class="theme-switch-wrapper">
+        <label class="theme-switch" for="checkbox">
+          <input type="checkbox" id="checkbox" />
+          <div class="slider round"></div>
+        </label>
+      </div>
+      <div id="auth-buttons" class="auth-buttons-wrapper"></div>
+      <button class="btn" id="friendsBtn" style="display:none;"><i class="fas fa-user-friends"></i> Friends</button>
+      <button class="btn" id="messagesBtn" style="display:none;"><i class="fas fa-comments"></i> Messages</button>
+    </div>
+  </header>
+
+  <div class="main-content">
+
+    <h1 id="welcomeMessage" class="main-heading"></h1>
+
+    <main class="main">
+      <section>
+        <nav class="tabs" role="tablist" aria-label="Main tabs">
+          <div class="tab active" data-tab="announcements"><i class="fas fa-bullhorn"></i> Announcements</div>
+          <div class="tab" data-tab="events"><i class="fas fa-calendar-alt"></i> Events</div>
+          <div class="tab" data-tab="lostfound"><i class="fas fa-box-open"></i> Lost &amp; Found</div>
+          <div class="tab" data-tab="resources"><i class="fas fa-book"></i> Resource</div>
+          <div class="tab" data-tab="groups"><i class="fas fa-users"></i> Community Connect</div>
+          <div class="tab" data-tab="courses"><i class="fas fa-graduation-cap"></i> Courses</div>
+        </nav>
+
+        <div id="categoryFilters" class="category-filters" style="display: none;"></div>
+        
+        <div id="contentArea"></div>
+      </section>
+      <aside class="sidebar">
+        <div class="sidebar-content">
+            <h3 style="margin-top:0">Quick Actions</h3>
+            <p class="small">Easily create a new post by selecting a category.</p>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <button class="btn secondary quick-action-btn" data-post-type="announcements">Add Announcement</button>
+              <button class="btn secondary quick-action-btn" data-post-type="events">Add Event</button>
+              <button class="btn secondary quick-action-btn" data-post-type="lostfound">Add Lost/Found</button>
+              <button class="btn secondary quick-action-btn" data-post-type="resources">Add Resource</button>
+              <button class="btn secondary quick-action-btn" data-post-type="groups">Create Group</button>
+              <button class="btn secondary quick-action-btn" data-post-type="courses">Add Course</button>
+            </div>
+            <hr style="margin:16px 0; border:none; border-top:1px solid var(--muted-elements)">
+            <h4 style="margin:6px 0">About UniSphere</h4>
+            <p class="small">A student-centric hub for announcements, events, resource sharing, and more.</p>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <div id="footer-placeholder"></div>
+
+  <div id="postModal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn">&times;</span>
+      <h2>Create New Post</h2>
+      <form id="postForm" enctype="multipart/form-data">
+        <input type="hidden" id="postType" name="postType">
+        <input type="hidden" id="postId" name="postId">
+        
+        <div class="form-group">
+          <label for="postTitle">Title</label>
+          <input type="text" id="postTitle" name="title" required>
+        </div>
+        
+        <div id="lostFoundStatusGroup" class="form-group hidden">
+            <label for="postStatus">Status</label>
+            <select id="postStatus" name="status">
+                <option value="Lost">Lost</option>
+                <option value="Found">Found</option>
+            </select>
+        </div>
+
+        <div id="resourceCategoryGroup" class="form-group hidden">
+            <label for="postCategory">Category</label>
+            <select id="postCategory" name="category">
+                <option value="Lecture Notes">Lecture Notes</option>
+                <option value="Textbooks">Textbooks</option>
+                <option value="Exam Papers">Exam Papers</option>
+                <option value="Project Code">Project Code</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
+
+        <div id="courseCostGroup" class="form-group hidden">
+            <label for="postCostType">Cost</label>
+            <select id="postCostType" name="cost_type">
+                <option value="Free">Free</option>
+                <option value="Paid">Paid</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+          <label for="postDesc">Description</label>
+          <textarea id="postDesc" name="description" required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="postImage">Image (Optional)</label>
+          <input type="file" id="postImage" name="image" accept="image/*">
+        </div>
+        
+        <div class="form-group">
+          <label for="postFile">Attach File (e.g., PDF, ZIP)</label>
+          <input type="file" id="postFile" name="postFile">
+        </div>
+
+        <button type="submit" class="btn">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span>Submit Post</span>
+        </button>
+      </form>
+    </div>
+  </div>
+  
+  <div id="globalSearchModal" class="modal">
+      <div class="modal-content">
+          <span class="close-btn">&times;</span>
+          <div id="globalSearchResultsContent"></div>
+      </div>
+  </div>
+
+  <div id="friendsModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn">&times;</span>
+        <h2>Friends</h2>
+        <div class="tabs">
+            <div class="tab" data-tab="myFriends">My Friends</div>
+            <div class="tab" data-tab="pendingRequests">Pending Requests</div>
+            <div class="tab" data-tab="findFriends">Find Friends</div>
+        </div>
+        <div id="friendsContent"></div>
+    </div>
+  </div>
+
+  <div id="chatModal" class="modal">
+    <div class="chat-container">
+        <div class="conversations-list">
+            <div class="chat-header">
+                <button id="backToConversationsBtn" style="display: none;"><i class="fas fa-arrow-left"></i></button>
+                <h3>Conversations</h3>
+                <button id="newConversationBtn"><i class="fas fa-plus"></i></button>
+            </div>
+            <div id="conversation-items"></div>
+        </div>
+        <div class="chat-area" style="display: none;">
+            <div class="chat-header" id="chat-area-header"></div>
+            <div class="chat-messages" id="chat-messages"></div>
+            <div class="chat-input-area">
+                <form id="sendMessageForm">
+                    <input type="hidden" name="conversationId" id="conversationId">
+                    <input type="text" id="messageInput" name="message" placeholder="Type a message..." autocomplete="off" required>
+                    <button type="submit" class="btn">Send</button>
+                </form>
+            </div>
+        </div>
+        <div class="chat-placeholder">
+            <i class="fas fa-comments"></i>
+            <p>Select a conversation or start a new one.</p>
+        </div>
+        <span class="close-btn">&times;</span>
+    </div>
+  </div>
+  
+  <div id="imagePreviewModal" class="modal">
+      <div class="modal-content">
+          <span class="close-btn">&times;</span>
+          <img src="" id="fullSizeImage">
+          <div id="recommendations-container"></div>
+      </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.0.2/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.3.6/purify.min.js"></script>
+  
+  <script type="module" src="js/main.js"></script>
+</body>
+
+</html>
